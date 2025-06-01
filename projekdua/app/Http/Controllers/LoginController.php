@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -26,14 +27,52 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        // Log untuk debugging
+        Log::info('Login attempt', [
+            'email' => $request->email,
+            'credentials' => $credentials
+        ]);
+
+        // Coba login
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return redirect()->intended('dashboard');
+            // Ambil data user
+            $user = Auth::user();
+
+            // Log untuk debugging
+            Log::info('User login attempt', [
+                'email' => $request->email,
+                'role' => $user->role ?? 'no role',
+                'user_id' => $user->id_user ?? 'no id',
+                'session_id' => session()->getId()
+            ]);
+
+            // Cek role admin
+            if ($user && $user->role === 'admin') {
+                Log::info('Admin login successful', [
+                    'user_id' => $user->id_user,
+                    'role' => $user->role
+                ]);
+                return redirect()->route('dashboard');
+            } else {
+                Log::warning('Non-admin login attempt', [
+                    'user_id' => $user->id_user,
+                    'role' => $user->role
+                ]);
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Akses hanya untuk admin.',
+                ]);
+            }
         }
 
+        Log::warning('Login failed', [
+            'email' => $request->email
+        ]);
+
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'email' => 'Email atau password yang dimasukkan tidak sesuai.',
         ]);
     }
 

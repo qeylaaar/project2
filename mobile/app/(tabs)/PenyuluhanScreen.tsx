@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
@@ -6,7 +6,7 @@ import axios from 'axios';
 
 // Konfigurasi axios
 const api = axios.create({
-  baseURL: 'http://http://192.168.56.1:8000',
+  baseURL: 'http://192.168.56.1:8000',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -22,6 +22,16 @@ interface Penyuluhan {
   lokasi: string;
   pemateri: string;
   status: string;
+}
+
+function formatTanggal(tanggal: string) {
+  const date = new Date(tanggal);
+  return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function formatWaktu(waktu: string) {
+  const date = new Date(waktu);
+  return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function PenyuluhanScreen() {
@@ -86,35 +96,41 @@ export default function PenyuluhanScreen() {
         data={penyuluhan}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={{ padding: 16, paddingTop: 80 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            onPress={() => router.push({
-              pathname: '/detailPenyuluhan',
-              params: { id: item.id },
-            })}
-          >
-            <View style={styles.card}>
-              <Text style={styles.tema}>{item.judul}</Text>
-              <Text style={styles.subText}>Tanggal: {item.tanggal}</Text>
-              <Text style={styles.subText}>Waktu: {item.waktu}</Text>
-              <Text style={styles.subText}>Lokasi: {item.lokasi}</Text>
-              <Text style={styles.subText}>Pemateri: {item.pemateri}</Text>
-              <Text style={styles.deskripsi}>{item.deskripsi}</Text>
-              <View style={styles.statusContainer}>
-                <Text style={[
-                  styles.statusText,
-                  { color: item.status === 'aktif' ? '#4CAF50' : 
-                          item.status === 'selesai' ? '#9E9E9E' : '#F44336' }
-                ]}>
-                  Status: {item.status}
-                </Text>
+        renderItem={({ item }) => {
+          console.log('ITEM:', item);
+          return (
+            <TouchableOpacity 
+              onPress={() => router.push({
+                pathname: '/detailPenyuluhan',
+                params: { id: item.id },
+              })}
+            >
+              <View style={styles.card}>
+                <Text style={styles.tema}>{item.judul}</Text>
+                <Text style={styles.subText}>Tanggal: {formatTanggal(item.tanggal)}</Text>
+                <Text style={styles.subText}>Waktu: {formatWaktu(item.waktu)}</Text>
+                <Text style={styles.subText}>Lokasi: {item.lokasi}</Text>
+                <Text style={styles.subText}>Pemateri: {item.pemateri}</Text>
+                <Text style={styles.deskripsi}>{item.deskripsi}</Text>
+                <View style={styles.statusContainer}>
+                  <Text style={[
+                    styles.statusText,
+                    { color: item.status === 'aktif' ? '#4CAF50' : 
+                            item.status === 'selesai' ? '#9E9E9E' : '#F44336' }
+                  ]}>
+                    Status: {item.status}
+                  </Text>
+                </View>
               </View>
-            </View>
-          </TouchableOpacity>
-        )}
+            </TouchableOpacity>
+          );
+        }}
       />
-      <TouchableOpacity style={styles.backButton} onPress={() => router.push('/Homepage')}>
-        <AntDesign name="arrowleft" size={24} color="white" />
+      <TouchableOpacity
+        style={styles.backButtonBottom}
+        onPress={() => router.push('/Homepage')}
+      >
+        <Text style={styles.backButtonText}>Kembali ke Beranda</Text>
       </TouchableOpacity>
     </View>
   );
@@ -183,10 +199,25 @@ const styles = StyleSheet.create({
   statusText: {
     fontWeight: 'bold',
   },
-  backButton: {
-    position: 'absolute',
-    left: 20,
-    top: 40,
-    zIndex: 1,
+  backButtonBottom: {
+    backgroundColor: '#D2601A',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 25,
+    marginTop: 30,
+    marginBottom: 40,
+    alignSelf: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 17,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    textAlign: 'center',
   },
 });

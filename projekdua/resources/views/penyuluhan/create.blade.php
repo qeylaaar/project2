@@ -5,9 +5,14 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
-            <div class="card mb-4"
+            <div class="card mb-4">
                 <div class="card-header pb-0">
-                    <h6>Tambah Jadwal Penyuluhan Baru</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Tambah Jadwal Penyuluhan</h6>
+                        <a href="{{ route('penyuluhan.index') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Kembali
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('penyuluhan.store') }}" method="POST">
@@ -78,8 +83,9 @@
                             @enderror
                         </div>
                         <div class="d-flex justify-content-end">
-                            <a href="{{ route('penyuluhan.index') }}" class="btn btn-secondary me-2">Batal</a>
-                            <button type="submit" class="btn btn-primary">Simpan</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Simpan
+                            </button>
                         </div>
                     </form>
                 </div>

@@ -19,14 +19,14 @@
                         </div>
                     </div>
                     <div class="card-body px-0 pt-0 pb-2">
-                        <form action="{{ route('edukasi-bencana.store') }}" method="POST">
+                        <form action="{{ route('edukasi-bencana.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="row p-3">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="judul" class="form-control-label">Judul</label>
-                                        <input type="text" class="form-control @error('judul') is-invalid @enderror" id="judul" name="judul" value="{{ old('judul') }}" required>
-                                        @error('judul')
+                                        <label for="gambar" class="form-control-label">Gambar</label>
+                                        <input type="file" class="form-control @error('gambar') is-invalid @enderror" id="gambar" name="gambar" accept="image/*">
+                                        @error('gambar')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -34,7 +34,15 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="jenis_bencana" class="form-control-label">Jenis Bencana</label>
-                                        <input type="text" class="form-control @error('jenis_bencana') is-invalid @enderror" id="jenis_bencana" name="jenis_bencana" value="{{ old('jenis_bencana') }}" required>
+                                        <select class="form-control @error('jenis_bencana') is-invalid @enderror" id="jenis_bencana" name="jenis_bencana" required>
+                                            <option value="">Pilih Jenis Bencana</option>
+                                            <option value="Tanah Longsor">Tanah Longsor</option>
+                                            <option value="Gempa Bumi">Gempa Bumi</option>
+                                            <option value="Banjir">Banjir</option>
+                                            <option value="Erupsi Gunung Berapi">Erupsi Gunung Berapi</option>
+                                            <option value="Angin Puting Beliung">Angin Puting Beliung</option>
+                                            <option value="Tsunami">Tsunami</option>
+                                        </select>
                                         @error('jenis_bencana')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

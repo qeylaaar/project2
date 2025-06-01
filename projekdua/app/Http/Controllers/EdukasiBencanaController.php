@@ -25,10 +25,20 @@ class EdukasiBencanaController extends Controller
             'deskripsi' => 'required|string',
             'jenis_bencana' => 'required|string|max:100',
             'tanggal' => 'required|date',
-            'status' => 'required|in:draft,published'
+            'status' => 'required|in:draft,published',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        EdukasiBencana::create($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = time().'_'.$file->getClientOriginalName();
+            $file->move(public_path('uploads/edukasi'), $filename);
+            $data['gambar'] = 'uploads/edukasi/'.$filename;
+        }
+
+        EdukasiBencana::create($data);
 
         return redirect()->route('edukasi-bencana.index')
             ->with('success', 'Data edukasi bencana berhasil ditambahkan');
@@ -51,10 +61,20 @@ class EdukasiBencanaController extends Controller
             'deskripsi' => 'required|string',
             'jenis_bencana' => 'required|string|max:100',
             'tanggal' => 'required|date',
-            'status' => 'required|in:draft,published'
+            'status' => 'required|in:draft,published',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $edukasiBencana->update($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = time().'_'.$file->getClientOriginalName();
+            $file->move(public_path('uploads/edukasi'), $filename);
+            $data['gambar'] = 'uploads/edukasi/'.$filename;
+        }
+
+        $edukasiBencana->update($data);
 
         return redirect()->route('edukasi-bencana.index')
             ->with('success', 'Data edukasi bencana berhasil diperbarui');

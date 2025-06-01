@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PenyuluhanController;
+use App\Http\Controllers\Api\PengaduanController;
+use App\Http\Controllers\Api\EdukasiBencanaApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,7 @@ Route::get('/halo', function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+
 // User routes
 Route::get('/user/{id}', [UserController::class, 'show']);
 
@@ -39,3 +42,10 @@ Route::post('/penyuluhan', [PenyuluhanController::class, 'apiStore']);
 Route::get('/penyuluhan/{id}', [PenyuluhanController::class, 'apiShow']);
 Route::put('/penyuluhan/{id}', [PenyuluhanController::class, 'apiUpdate']);
 Route::delete('/penyuluhan/{id}', [PenyuluhanController::class, 'apiDestroy']);
+
+// Pengaduan routes
+Route::post('/pengaduans', [PengaduanController::class, 'store']);
+
+// Edukasi Bencana routes
+Route::get('/edukasi-bencana', [EdukasiBencanaApiController::class, 'index']);
+Route::get('/edukasi-bencana/{jenis}', [EdukasiBencanaApiController::class, 'byJenis']);

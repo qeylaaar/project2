@@ -9,6 +9,8 @@ class Pengaduan extends Model
 {
     use HasFactory;
 
+    protected $table = 'pengaduans';
+
     protected $fillable = [
         'tanggal',
         'nama_pelapor',
@@ -17,5 +19,5 @@ class Pengaduan extends Model
         'status'
     ];
 
-    protected $dates = ['tanggal'];
+    protected $dates = ['tanggal', 'created_at', 'updated_at'];
 }

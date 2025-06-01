@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use App\Models\Masyarakat;
 
 class AuthController extends Controller
 {
@@ -19,6 +18,7 @@ class AuthController extends Controller
                 'nama_user' => 'required|string',
                 'no_telepon' => 'required|string',
                 'email' => 'required|email|unique:user,email',
+                'username' => 'required|string|unique:user,username',
                 'password' => 'required|min:6',
             ]);
 
@@ -27,8 +27,9 @@ class AuthController extends Controller
                 'nama_user' => $request->nama_user,
                 'no_telepon' => $request->no_telepon,
                 'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'user' // Set default role
+                'username' => $request->username,
+                'password' => $request->password,
+                'role' => 'user'
             ]);
 
             return response()->json([
@@ -38,21 +39,12 @@ class AuthController extends Controller
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation error in register:', [
-                'errors' => $e->errors(),
-                'request' => $request->all()
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error in register:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat registrasi',
@@ -68,7 +60,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $user = Masyarakat::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
 
         if ($user && Hash::check($request->password, $user->password)) {
             return response()->json([

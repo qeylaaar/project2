@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, Link } from 'expo-router';
 import { login } from '../api/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Loginscreen() {
     const [email, setEmail] = useState('');
@@ -33,6 +34,7 @@ export default function Loginscreen() {
                 setPassword('');
                 // Redirect ke Homepage
                 router.replace('/Homepage');
+                await AsyncStorage.setItem('user', JSON.stringify(response.data));
             } else {
                 console.log('Login failed:', response.error);
                 setError(response.error || 'Email atau Password salah');

@@ -5,33 +5,60 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
-} from 'react-native';
+  Image,
+  ScrollView,
+  Alert,
+  ActivityIndicator,} from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
-import { dummyUsers } from '../api/dummyUsers';
-import { useRouter } from 'expo-router';
-import { useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { Video, ResizeMode } from 'expo-av';
+import axios from 'axios';
+import * as Location from 'expo-location';
+import JenisBencanaPicker from '../api/JenisBencanaPicker';
+import LocationPickers from '../api/LocationPickers';  
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ReportScreen() {
   const navigation = useNavigation();
   const router = useRouter();
 
-  const [namaLengkap, setNamaLengkap] = useState(dummyUsers[2].name);
+  const [namaLengkap, setNamaLengkap] = useState('');
   const [tanggal, setTanggal] = useState(new Date());
   const [waktu, setWaktu] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [jenisBencana, setJenisBencana] = useState('');
-  const [kecamatan, setKecamatan] = useState('');
-  const [desa, setDesa] = useState('');
-  const [alamat, setAlamat] = useState('');
 
-  const [laporanList, setLaporanList] = useState<any[]>([]);
+  const [jenisBencana, setJenisBencana] = useState('');
+  const [customJenisBencana, setCustomJenisBencana] = useState('');
+
+  const [kecamatan, setKecamatan] = useState('Pilih Kecamatan');
+  const [desa, setDesa] = useState('Pilih Desa');
+
+  const [alamat, setAlamat] = useState('');
+  const [media, setMedia] = useState<{ uri: string; type: string } | null>(null);
+  const [loadingLocation, setLoadingLocation] = useState(false); 
 
   useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (userId) {
+          const response = await fetch(`http://192.168.56.1:8000/api/user/${userId}`);
+          const result = await response.json();
+          if (result.success && result.data) {
+            setNamaLengkap(result.data.nama_user || '');
+          }
+        }
+      } catch (e) {
+        setNamaLengkap('');
+      }
+    };
+    fetchUser();
+
     const now = new Date();
     const jam = now.getHours().toString().padStart(2, '0');
     const menit = now.getMinutes().toString().padStart(2, '0');
@@ -47,36 +74,102 @@ export default function ReportScreen() {
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
 
-  
   const { data } = useLocalSearchParams();
-  const laporan = data ? JSON.parse(data as string) : [];
 
-  const handleSubmit = () => {
+  const pickMedia = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const selected = result.assets[0];
+      const uri = selected.uri.toLowerCase();
+
+      const allowedExtensions = ['.jpg', '.jpeg', '.mp4', '.png'];
+      const isAllowed = allowedExtensions.some(ext => uri.endsWith(ext));
+
+      if (isAllowed) {
+        setMedia({ 
+          uri: selected.uri, 
+          type: selected.type || 'image' // Memberikan nilai default 'image' jika type undefined
+        });
+      } else {
+        Alert.alert('Format File Tidak Didukung', 'Harap unggah file JPG, JPEG, PNG, atau MP4.');
+      }
+    }
+  };
+
+  const handleGetLocation = async () => {
+    setLoadingLocation(true);
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Izin Lokasi Ditolak', 'Mohon berikan izin akses lokasi untuk mengisi alamat secara otomatis.');
+        setLoadingLocation(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+
+      const dummyAddress = `Jalan Contoh No. 123, Desa Dummy, Kecamatan Dummy, Subang`;
+      setAlamat(dummyAddress);
+      
+      Alert.alert('Lokasi Ditemukan', 'Alamat berhasil diisi secara otomatis.');
+
+    } catch (error) {
+      console.error('Gagal mendapatkan lokasi:', error);
+      Alert.alert('Gagal Mendapatkan Lokasi', 'Terjadi kesalahan saat mencoba mendapatkan lokasi Anda.');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    // Tentukan jenis bencana akhir yang akan disimpan
+    const finalJenisBencana = jenisBencana === 'Lainnya' ? customJenisBencana : jenisBencana;
+
+    // Validasi dasar
+    if (!namaLengkap || !finalJenisBencana || kecamatan === 'Pilih Kecamatan' || desa === 'Pilih Desa' || !alamat) {
+      Alert.alert('Form Belum Lengkap', 'Mohon lengkapi semua kolom yang wajib diisi.');
+      return;
+    }
+
+    // Validasi jenis bencana kustom jika 'Lainnya' dipilih
+    if (jenisBencana === 'Lainnya' && !customJenisBencana.trim()) {
+      Alert.alert('Jenis Bencana Tidak Boleh Kosong', 'Mohon masukkan jenis bencana lainnya.');
+      return;
+    }
+
     const newLaporan = {
-      id: laporanList.length + 1,
-      namaLengkap,
+      nama_pelapor: namaLengkap,
       tanggal: formatDate(tanggal),
       waktu,
-      jenisBencana,
+      jenis_pengaduan: finalJenisBencana,
       kecamatan,
       desa,
       alamat,
+      media_uri: media?.uri || '',
+      media_type: media?.type || '',
     };
 
-    const updatedList = [...laporanList, newLaporan];
-    setLaporanList(updatedList);
-
-    // Navigasi ke halaman history (jika dibuat)
-    router.push({
-    pathname: '/HistoryLaporan',
-    params: { data: encodeURIComponent(JSON.stringify(updatedList)) },
-    });
+    try {
+      await axios.post('http://192.168.56.1:8000/api/pengaduans', newLaporan);
+      Alert.alert('Laporan Terkirim', 'Laporan bencana Anda berhasil dikirim!');
+      router.push('/Homepage');
+    } catch (error) {
+      console.error('Gagal menyimpan laporan:', error);
+      Alert.alert('Terjadi Kesalahan', 'Terjadi kesalahan saat menyimpan laporan.');
+    }
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-
+      
+      {/* Header tetap di atas */}
       <View style={styles.topShape}>
         <TouchableOpacity
           style={styles.backButton}
@@ -86,108 +179,140 @@ export default function ReportScreen() {
         <Text style={styles.headerText}>Form Laporan Bencana</Text>
       </View>
 
-      <View style={styles.formContainer}>
-        <Text style={styles.label}>Nama Lengkap</Text>
-        <TextInput style={styles.input} value={namaLengkap} editable={false} />
-
-        <Text style={styles.label}>Tanggal Kejadian</Text>
-        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-          <Text>{formatDate(tanggal)}</Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={tanggal}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
+      {/* Konten yang dapat di-scroll */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>Nama Lengkap</Text>
+          <TextInput
+            style={styles.input}
+            value={namaLengkap}
+            editable={false}
+            placeholder="Nama Lengkap"
           />
-        )}
 
-        <Text style={styles.label}>Waktu Kejadian</Text>
-        <TextInput style={styles.input} value={waktu} editable={false} />
+          <Text style={styles.label}>Tanggal Kejadian</Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
+            <Text>{formatDate(tanggal)}</Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={tanggal}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleDateChange}
+            />
+          )}
 
-        <Text style={styles.label}>Jenis Bencana</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={jenisBencana}
-            onValueChange={(itemValue) => setJenisBencana(itemValue)}
+          <Text style={styles.label}>Waktu Kejadian</Text>
+          <TextInput style={styles.input} value={waktu} editable={false} />
+
+          {/* Memanggil komponen JenisBencanaPicker */}
+          <JenisBencanaPicker
+            jenisBencana={jenisBencana}
+            setJenisBencana={setJenisBencana}
+            customJenisBencana={customJenisBencana}
+            setCustomJenisBencana={setCustomJenisBencana}
+          />
+
+          {/* Memanggil komponen LocationPickers */}
+          <LocationPickers
+            kecamatan={kecamatan}
+            setKecamatan={setKecamatan}
+            desa={desa}
+            setDesa={setDesa}
+          />
+
+          <Text style={styles.label}>Alamat Lengkap</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Masukkan Alamat Lengkap"
+            value={alamat}
+            onChangeText={setAlamat}
+            multiline
+            numberOfLines={4}
+          />
+          
+          {/* Tombol untuk mengisi alamat otomatis */}
+          <TouchableOpacity
+            style={[styles.button, styles.autoFillButton]}
+            onPress={handleGetLocation}
+            disabled={loadingLocation}
           >
-            <Picker.Item label="Pilih Jenis Bencana" value="" />
-            <Picker.Item label="Tanah Longsor" value="Tanah Longsor" />
-            <Picker.Item label="Gempa Bumi" value="Gempa Bumi" />
-            <Picker.Item label="Banjir" value="Banjir" />
-            <Picker.Item label="Erupsi Gunung Berapi" value="Erupsi Gunung Berapi" />
-            <Picker.Item label="Angin Puting Beliung" value="Angin Puting Beliung" />
-            <Picker.Item label="Tsunami" value="Tsunami" />
-          </Picker>
+            {loadingLocation ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Isi Otomatis Lokasi</Text>
+            )}
+          </TouchableOpacity>
+
+          <Text style={styles.label}>Bukti Foto / Video</Text>
+          <TouchableOpacity onPress={pickMedia} style={styles.uploadButton}>
+            <Text style={styles.uploadText}>Pilih Foto atau Video</Text>
+          </TouchableOpacity>
+          {media?.type === 'image' && (
+            <Image source={{ uri: media.uri }} style={styles.previewMedia} />
+          )}
+          {media?.type === 'video' && (
+            <Video
+              source={{ uri: media.uri }}
+              style={styles.previewMedia}
+              useNativeControls
+              resizeMode={ResizeMode.CONTAIN}
+            />
+          )}
+
+          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>LAPOR</Text>
+          </TouchableOpacity>
         </View>
-
-        <Text style={styles.label}>Pilih Kecamatan</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Pilih Kecamatan"
-          value={kecamatan}
-          onChangeText={setKecamatan}
-        />
-
-        <Text style={styles.label}>Pilih Desa</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Pilih Desa"
-          value={desa}
-          onChangeText={setDesa}
-        />
-
-        <Text style={styles.label}>Alamat Lengkap</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Masukkan Alamat Lengkap"
-          value={alamat}
-          onChangeText={setAlamat}
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>LAPOR</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#FFF1E1',
-  },
+  container: { flex: 1, backgroundColor: '#FFF1E1' },
   topShape: {
     position: 'absolute',
     width: '100%',
-    height: '20%',
+    height: 100,
     backgroundColor: '#D2601A',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     justifyContent: 'center',
-    paddingTop: 40,
+    paddingTop: 20,
+    zIndex: 5,
   },
   backButton: {
     position: 'absolute',
     left: 20,
     top: 40,
-    zIndex: 1,
+    zIndex: 11,
   },
   headerText: {
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginTop: 10,
+  },
+  scrollView: {
+    flex: 1,
+    marginTop: 100,
+  },
+  scrollContainer: {
+    alignItems: 'center',
+    paddingBottom: 30,
   },
   formContainer: {
     width: '90%',
     backgroundColor: 'white',
     padding: 20,
     borderRadius: 12,
-    marginTop: 120,
     elevation: 5,
   },
   label: {
@@ -209,6 +334,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     marginTop: 5,
+    overflow: 'hidden',
+  },
+  picker: {
+    width: '100%',
+    height: 50,
+    color: '#333',
+  },
+  uploadButton: {
+    backgroundColor: '#E7E7E7',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 5,
+    alignItems: 'center',
+  },
+  uploadText: {
+    color: '#555',
+  },
+  previewMedia: {
+    width: '100%',
+    height: 200,
+    marginTop: 10,
+    borderRadius: 8,
   },
   button: {
     marginTop: 20,
@@ -218,9 +365,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+  buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  autoFillButton: {
+    backgroundColor: '#FF0000',
+    marginTop: 10,
   },
 });

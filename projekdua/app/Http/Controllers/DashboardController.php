@@ -16,9 +16,7 @@ class DashboardController extends Controller
         $total_pengaduan = Pengaduan::count();
 
         // Pengaduan Baru Hari Ini
-        $pengaduan_baru = DB::table('laporan_bencana')
-            ->whereDate('tanggal_laporan_dibuat', now()->toDateString())
-            ->count();
+        $pengaduan_baru = Pengaduan::whereDate('created_at', now()->toDateString())->count();
 
         // Pengaduan Diproses
         $pengaduan_diproses = Pengaduan::where('status', 'Proses')->count();

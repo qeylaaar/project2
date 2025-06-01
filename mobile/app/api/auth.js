@@ -59,11 +59,21 @@ export const register = async (nama_user, no_telepon, email, password) => {
       nama_user,
       no_telepon,
       email,
-      password
+      password,
+      username: email.split('@')[0], // Menambahkan username dari email
+      role: 'user' // Menambahkan role default
     });
 
     console.log('Register response:', response.data);
-    return { success: true, data: response.data };
+    
+    if (response.data.success) {
+      return { success: true, data: response.data };
+    } else {
+      return { 
+        success: false, 
+        error: response.data.message || 'Registrasi gagal'
+      };
+    }
   } catch (error) {
     console.error('Register error details:', {
       message: error.message,

@@ -20,18 +20,30 @@ class PengaduanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'nama_pelapor' => 'required|string',
             'tanggal' => 'required|date',
-            'nama_pelapor' => 'required|string|max:255',
-            'jenis_pengaduan' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
-            'status' => 'required|in:Menunggu,Proses,Selesai'
+            'waktu' => 'required',
+            'jenis_pengaduan' => 'required|string',
+            'kecamatan' => 'required|string',
+            'desa' => 'required|string',
+            'alamat' => 'required|string',
+            // tambahkan validasi lain jika perlu
         ]);
 
-        $pengaduan = Pengaduan::create($request->all());
+        $pengaduan = Pengaduan::create([
+            'nama_pelapor' => $request->nama_pelapor,
+            'tanggal' => $request->tanggal,
+            'waktu' => $request->waktu,
+            'jenis_pengaduan' => $request->jenis_pengaduan,
+            'kecamatan' => $request->kecamatan,
+            'desa' => $request->desa,
+            'alamat' => $request->alamat,
+            // tambahkan field lain jika ada
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Pengaduan berhasil ditambahkan',
+            'message' => 'Laporan berhasil dikirim',
             'data' => $pengaduan
         ], 201);
     }
