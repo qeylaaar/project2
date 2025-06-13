@@ -1,3 +1,4 @@
+@section('title', 'Detail Edukasi Bencana')
 @extends('layouts.app', ['class' => 'g-sidenav-show bg-gray-100'])
 
 @section('content')
@@ -38,7 +39,7 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-control-label">Tanggal</label>
-                                    <p class="form-control-static">{{ $edukasiBencana->tanggal->format('d/m/Y') }}</p>
+                                    <p class="form-control-static">{{ \Carbon\Carbon::parse($edukasiBencana->tanggal)->format('d/m/Y') }}</p>
                                 </div>
                             </div>
                             <div class="col-md-6">

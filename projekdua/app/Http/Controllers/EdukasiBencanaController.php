@@ -31,17 +31,22 @@ class EdukasiBencanaController extends Controller
 
         $data = $request->all();
 
-        if ($request->hasFile('gambar')) {
-            $file = $request->file('gambar');
-            $filename = time().'_'.$file->getClientOriginalName();
-            $file->move(public_path('uploads/edukasi'), $filename);
-            $data['gambar'] = 'uploads/edukasi/'.$filename;
+        try {
+            if ($request->hasFile('gambar')) {
+                $file = $request->file('gambar');
+                $filename = time().'_'.$file->getClientOriginalName();
+                $file->move(public_path('uploads/edukasi'), $filename);
+                $data['gambar'] = 'uploads/edukasi/'.$filename;
+            }
+
+            EdukasiBencana::create($data);
+
+            return redirect()->route('edukasi-bencana.index')
+                ->with('success', 'Data edukasi bencana berhasil ditambahkan!');
+        } catch (\Exception $e) {
+            return redirect()->route('edukasi-bencana.create')
+                ->with('error', 'Gagal menambah data edukasi bencana: ' . $e->getMessage());
         }
-
-        EdukasiBencana::create($data);
-
-        return redirect()->route('edukasi-bencana.index')
-            ->with('success', 'Data edukasi bencana berhasil ditambahkan');
     }
 
     public function show(EdukasiBencana $edukasiBencana)

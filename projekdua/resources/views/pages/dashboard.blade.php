@@ -166,10 +166,10 @@
                                             {{ $pengaduan->status }}
                                         </span>
                                     </td>
-                                    <td>{{ $pengaduan->tanggal->format('d/m/Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($pengaduan->tanggal)->format('d/m/Y') }}</td>
                                     <td>
                                         <a href="{{ route('pengaduan.show', $pengaduan->id) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="fas fa-eye">Lihat Detail</i>
                                         </a>
                                     </td>
                                 </tr>

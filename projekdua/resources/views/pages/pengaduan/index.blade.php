@@ -1,8 +1,26 @@
+@section('title', 'Data Pengaduan')
 @extends('layouts.app', ['class' => 'g-sidenav-show bg-gray-100'])
 
 @section('content')
     @include('layouts.navbars.auth.topnav', ['title' => 'Data Pengaduan'])
     <div class="container-fluid py-4">
+        @if(session('success'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: '{{ session('success') }}',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                });
+            </script>
+        @endif
+
+        @push('js')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        @endpush
         <div class="row">
             <div class="col-12">
                 <div class="card mb-4">
@@ -45,7 +63,7 @@
                                         <td>
                                             <div class="d-flex px-2 py-1">
                                                 <div class="d-flex flex-column justify-content-center">
-                                                    <h6 class="mb-0 text-sm">{{ $pengaduan->tanggal->format('d/m/Y') }}</h6>
+                                                    <h6 class="mb-0 text-sm">{{ date('d/m/Y', strtotime($pengaduan->tanggal)) }}</h6>
                                                 </div>
                                             </div>
                                         </td>
@@ -80,13 +98,6 @@
                                                 <a href="{{ route('pengaduan.edit', $pengaduan->id) }}" class="btn btn-link text-dark px-3 mb-0">
                                                     <i class="fas fa-pencil-alt text-dark me-2"></i>Edit
                                                 </a>
-                                                <form action="{{ route('pengaduan.destroy', $pengaduan->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-link text-danger px-3 mb-0" onclick="return confirm('Apakah Anda yakin ingin menghapus pengaduan ini?')">
-                                                        <i class="far fa-trash-alt me-2"></i>Hapus
-                                                    </button>
-                                                </form>
                                             </div>
                                         </td>
                                     </tr>

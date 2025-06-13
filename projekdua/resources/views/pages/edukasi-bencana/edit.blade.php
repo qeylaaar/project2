@@ -1,3 +1,4 @@
+@section('title', 'Edit Edukasi Bencana')
 @extends('layouts.app', ['class' => 'g-sidenav-show bg-gray-100'])
 
 @section('content')
@@ -44,7 +45,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="tanggal" class="form-control-label">Tanggal</label>
-                                        <input type="date" class="form-control @error('tanggal') is-invalid @enderror" id="tanggal" name="tanggal" value="{{ old('tanggal', $edukasiBencana->tanggal->format('Y-m-d')) }}" required>
+                                        <input type="date" class="form-control @error('tanggal') is-invalid @enderror" id="tanggal" name="tanggal" value="{{ old('tanggal', \Carbon\Carbon::parse($edukasiBencana->tanggal)->format('Y-m-d')) }}" required>
                                         @error('tanggal')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

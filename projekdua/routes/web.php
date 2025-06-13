@@ -18,6 +18,7 @@ use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\EdukasiBencanaController;
 use App\Http\Controllers\PenyuluhanController;
+use App\Http\Controllers\HeatmapController;
 
 // Route untuk guest (belum login)
 Route::middleware('guest')->group(function () {
@@ -60,6 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
     // Halaman dinamis (harus di bagian bawah)
+    Route::get('/page/heatmap', [HeatmapController::class, 'index'])->name('page.heatmap');
     Route::get('/{page}', [PageController::class, 'index'])->name('page');
 
     // Route untuk Penyuluhan
@@ -69,4 +71,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/penyuluhan/{id}/edit', [App\Http\Controllers\PenyuluhanController::class, 'edit'])->name('penyuluhan.edit');
     Route::put('/penyuluhan/{id}', [App\Http\Controllers\PenyuluhanController::class, 'update'])->name('penyuluhan.update');
     Route::delete('/penyuluhan/{id}', [App\Http\Controllers\PenyuluhanController::class, 'destroy'])->name('penyuluhan.destroy');
+
+
 });

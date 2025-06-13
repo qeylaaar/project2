@@ -7,6 +7,7 @@ use App\Models\Pengguna;
 use App\Models\EdukasiBencana;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -34,9 +35,14 @@ class DashboardController extends Controller
         $edukasi_terbaru = EdukasiBencana::latest()->take(5)->get();
 
         // Kategori Pengaduan
-        $kategori_pengaduan = Pengaduan::select('jenis_pengaduan', \DB::raw('count(*) as total'))
+        $kategori_pengaduan = Pengaduan::select('jenis_pengaduan', DB::raw('count(*) as total'))
             ->groupBy('jenis_pengaduan')
             ->get();
+
+        // Ubah format tanggal di edukasi_terbaru
+        foreach ($edukasi_terbaru as $edukasi) {
+            $edukasi->tanggal = Carbon::parse($edukasi->tanggal);
+        }
 
         return view('pages.dashboard', [
             'total_pengaduan' => $total_pengaduan,

@@ -41,12 +41,16 @@ export default function ReportScreen() {
   const [alamat, setAlamat] = useState('');
   const [media, setMedia] = useState<{ uri: string; type: string } | null>(null);
   const [loadingLocation, setLoadingLocation] = useState(false); 
+  const [deskripsi, setDeskripsi] = useState('');
+  const [userId, setUserId] = useState('');
+  const [linkLokasi, setLinkLokasi] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
         if (userId) {
+          setUserId(userId);
           const response = await fetch(`http://192.168.56.1:8000/api/user/${userId}`);
           const result = await response.json();
           if (result.success && result.data) {
@@ -71,33 +75,42 @@ export default function ReportScreen() {
   };
 
   const formatDate = (date: Date) => {
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    // Format: YYYY-MM-DD
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const { data } = useLocalSearchParams();
 
-  const pickMedia = async () => {
+  const pickFromCamera = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      quality: 1,
+    });
+    if (!result.canceled) {
+      const selected = result.assets[0];
+      setMedia({
+        uri: selected.uri,
+        type: selected.type || 'image'
+      });
+    }
+  };
+
+  const pickFromGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       quality: 1,
     });
-
     if (!result.canceled) {
       const selected = result.assets[0];
-      const uri = selected.uri.toLowerCase();
-
-      const allowedExtensions = ['.jpg', '.jpeg', '.mp4', '.png'];
-      const isAllowed = allowedExtensions.some(ext => uri.endsWith(ext));
-
-      if (isAllowed) {
-        setMedia({ 
-          uri: selected.uri, 
-          type: selected.type || 'image' // Memberikan nilai default 'image' jika type undefined
-        });
-      } else {
-        Alert.alert('Format File Tidak Didukung', 'Harap unggah file JPG, JPEG, PNG, atau MP4.');
-      }
+      setMedia({
+        uri: selected.uri,
+        type: selected.type || 'image'
+      });
     }
   };
 
@@ -143,25 +156,111 @@ export default function ReportScreen() {
       return;
     }
 
-    const newLaporan = {
+    const formData = new FormData();
+    formData.append('nama_pelapor', namaLengkap);
+    formData.append('tanggal', formatDate(tanggal));
+    formData.append('waktu', waktu);
+    formData.append('jenis_pengaduan', finalJenisBencana);
+    formData.append('kecamatan', kecamatan);
+    formData.append('desa', desa);
+    formData.append('alamat', alamat);
+    formData.append('status', 'Menunggu');
+    formData.append('deskripsi', deskripsi);
+    formData.append('user_id', userId);
+
+    console.log('Form Data yang dikirim:', {
       nama_pelapor: namaLengkap,
       tanggal: formatDate(tanggal),
-      waktu,
+      waktu: waktu,
       jenis_pengaduan: finalJenisBencana,
-      kecamatan,
-      desa,
-      alamat,
-      media_uri: media?.uri || '',
-      media_type: media?.type || '',
-    };
+      kecamatan: kecamatan,
+      desa: desa,
+      alamat: alamat,
+      status: 'Menunggu',
+      deskripsi: deskripsi,
+      user_id: userId
+    });
+
+    if (media) {
+      formData.append('media', {
+        uri: media.uri,
+        name: 'bukti.' + (media.type === 'image' ? 'jpg' : 'mp4'),
+        type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
+      } as any);
+    }
 
     try {
-      await axios.post('http://192.168.56.1:8000/api/pengaduans', newLaporan);
+      const response = await axios.post('http://192.168.56.1:8000/api/pengaduans', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      console.log('Response dari server:', response.data);
+      
       Alert.alert('Laporan Terkirim', 'Laporan bencana Anda berhasil dikirim!');
       router.push('/Homepage');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Gagal menyimpan laporan:', error);
+      if (error.response) {
+        console.log('Response data:', error.response.data);
+        console.log('Response status:', error.response.status);
+        console.log('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.log('Request:', error.request);
+      } else {
+        console.log('Error Message:', error.message);
+      }
       Alert.alert('Terjadi Kesalahan', 'Terjadi kesalahan saat menyimpan laporan.');
+    }
+  };
+
+  const isiOtomatisLokasi = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Izin Lokasi Ditolak', 'Mohon izinkan akses lokasi.');
+        return;
+      }
+      let location = await Location.getCurrentPositionAsync({});
+      let [geo] = await Location.reverseGeocodeAsync(location.coords);
+
+      setAlamat(
+        [geo.street, geo.name, geo.subregion, geo.region]
+          .filter(Boolean)
+          .join(', ')
+      );
+      setKecamatan(geo.subregion || '');
+      setDesa(geo.name || '');
+
+      Alert.alert('Lokasi Diisi Otomatis', 'Kecamatan, Desa, dan alamat berhasil diisi.');
+    } catch (error) {
+      Alert.alert('Gagal', 'Tidak bisa mendapatkan lokasi.');
+    }
+  };
+
+  const lampirkanLinkLokasi = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Izin Lokasi Ditolak', 'Mohon izinkan akses lokasi.');
+        return;
+      }
+      let location = await Location.getCurrentPositionAsync({});
+      let [geo] = await Location.reverseGeocodeAsync(location.coords);
+
+      setAlamat(
+        [geo.street, geo.name, geo.subregion, geo.region]
+          .filter(Boolean)
+          .join(', ')
+      );
+      setKecamatan(geo.subregion || '');
+      setDesa(geo.name || '');
+
+      // Buat link Google Maps
+      const link = `https://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`;
+      setLinkLokasi(link);
+
+      Alert.alert('Link Lokasi Dilampirkan', 'Kecamatan, Desa, alamat, dan link lokasi berhasil diisi.');
+    } catch (error) {
+      Alert.alert('Gagal', 'Tidak bisa mendapatkan lokasi.');
     }
   };
 
@@ -236,23 +335,45 @@ export default function ReportScreen() {
             numberOfLines={4}
           />
           
-          {/* Tombol untuk mengisi alamat otomatis */}
-          <TouchableOpacity
-            style={[styles.button, styles.autoFillButton]}
-            onPress={handleGetLocation}
-            disabled={loadingLocation}
-          >
-            {loadingLocation ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Isi Otomatis Lokasi</Text>
-            )}
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#D32F2F', flex: 1, marginRight: 5 }]}
+              onPress={isiOtomatisLokasi}
+            >
+              <Text style={{ color: 'white', textAlign: 'center' }}>Isi Otomatis</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#43A047', flex: 1, marginLeft: 5 }]}
+              onPress={lampirkanLinkLokasi}
+            >
+              <Text style={{ color: 'white', textAlign: 'center' }}>Lampirkan Link</Text>
+            </TouchableOpacity>
+          </View>
 
-          <Text style={styles.label}>Bukti Foto / Video</Text>
-          <TouchableOpacity onPress={pickMedia} style={styles.uploadButton}>
-            <Text style={styles.uploadText}>Pilih Foto atau Video</Text>
-          </TouchableOpacity>
+          <Text style={styles.label}>Deskripsi Kejadian</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Masukkan deskripsi kejadian"
+            value={deskripsi}
+            onChangeText={setDeskripsi}
+            multiline
+            numberOfLines={4}
+          />
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+            <TouchableOpacity
+              onPress={pickFromCamera}
+              style={[styles.uploadButton, { backgroundColor: '#1976D2', flex: 1, marginRight: 5 }]}
+            >
+              <Text style={[styles.uploadText, { color: 'white', textAlign: 'center' }]}>Buka Kamera</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={pickFromGallery}
+              style={[styles.uploadButton, { backgroundColor: '#7C3AED', flex: 1, marginLeft: 5 }]}
+            >
+              <Text style={[styles.uploadText, { color: 'white', textAlign: 'center' }]}>Pilih Galeri</Text>
+            </TouchableOpacity>
+          </View>
           {media?.type === 'image' && (
             <Image source={{ uri: media.uri }} style={styles.previewMedia} />
           )}
@@ -342,14 +463,14 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   uploadButton: {
-    backgroundColor: '#E7E7E7',
     padding: 12,
     borderRadius: 8,
     marginTop: 5,
     alignItems: 'center',
   },
   uploadText: {
-    color: '#555',
+    color: '#fff',
+    fontWeight: 'bold',
   },
   previewMedia: {
     width: '100%',
@@ -369,5 +490,9 @@ const styles = StyleSheet.create({
   autoFillButton: {
     backgroundColor: '#FF0000',
     marginTop: 10,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
 });

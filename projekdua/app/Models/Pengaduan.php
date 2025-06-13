@@ -12,12 +12,30 @@ class Pengaduan extends Model
     protected $table = 'pengaduans';
 
     protected $fillable = [
-        'tanggal',
+        'user_id',
         'nama_pelapor',
+        'tanggal',
+        'waktu',
         'jenis_pengaduan',
+        'kecamatan',
+        'desa',
+        'alamat',
+        'media_uri',
+        'media_type',
         'deskripsi',
-        'status'
+        'status',
+        'feedback',
+        'bukti'
     ];
 
     protected $dates = ['tanggal', 'created_at', 'updated_at'];
+
+    protected $casts = [
+        'tanggal' => 'datetime',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
 }

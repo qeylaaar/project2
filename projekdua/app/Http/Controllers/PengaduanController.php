@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pengaduan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PengaduanController extends Controller
 {
@@ -36,6 +37,7 @@ class PengaduanController extends Controller
 
     public function show(Pengaduan $pengaduan)
     {
+        $pengaduan->load('user');
         return view('pages.pengaduan.show', compact('pengaduan'));
     }
 
@@ -51,10 +53,25 @@ class PengaduanController extends Controller
             'nama_pelapor' => 'required|string|max:255',
             'jenis_pengaduan' => 'required|string|max:255',
             'deskripsi' => 'required|string',
-            'status' => 'required|in:Menunggu,Proses,Selesai'
+            'status' => 'required|in:Menunggu,Proses,Selesai',
+            'feedback' => 'nullable|string',
+            'bukti.*' => 'nullable|mimes:jpg,jpeg,png,gif,mp4,mov,avi|max:10240'
         ]);
 
-        $pengaduan->update($request->all());
+        $data = $request->except('bukti');
+
+        $buktiLama = [];
+        if ($pengaduan->bukti) {
+            $buktiLama = json_decode($pengaduan->bukti, true) ?? [];
+        }
+        if ($request->hasFile('bukti')) {
+            foreach ($request->file('bukti') as $file) {
+                $buktiLama[] = $file->store('bukti', 'public');
+            }
+        }
+        $data['bukti'] = json_encode($buktiLama);
+
+        $pengaduan->update($data);
 
         return redirect()->route('pengaduan.index')
             ->with('success', 'Pengaduan berhasil diperbarui');
@@ -66,5 +83,16 @@ class PengaduanController extends Controller
 
         return redirect()->route('pengaduan.index')
             ->with('success', 'Pengaduan berhasil dihapus');
+    }
+
+    public function uploadMedia(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $path = $file->store('public/uploads');
+            $url = asset(str_replace('public/', 'storage/', $path));
+            return response()->json(['success' => true, 'url' => $url]);
+        }
+        return response()->json(['success' => false, 'error' => 'No file uploaded']);
     }
 }

@@ -35,6 +35,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // User routes
 Route::get('/user/{id}', [UserController::class, 'show']);
+Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken']);
 
 // Penyuluhan routes
 Route::get('/penyuluhan', [PenyuluhanController::class, 'apiIndex']);
@@ -45,6 +46,8 @@ Route::delete('/penyuluhan/{id}', [PenyuluhanController::class, 'apiDestroy']);
 
 // Pengaduan routes
 Route::post('/pengaduans', [PengaduanController::class, 'store']);
+Route::get('/pengaduans/user/{user_id}', [PengaduanController::class, 'byUser']);
+Route::post('/upload-media', [PengaduanController::class, 'uploadMedia']);
 
 // Edukasi Bencana routes
 Route::get('/edukasi-bencana', [EdukasiBencanaApiController::class, 'index']);

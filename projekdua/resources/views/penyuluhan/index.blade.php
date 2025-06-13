@@ -1,3 +1,4 @@
+@section('title', 'Jadwal Penyuluhan')
 @extends('layouts.app', ['class' => 'g-sidenav-show bg-gray-100'])
 
 @section('content')
@@ -60,13 +61,6 @@
                                             <a href="{{ route('penyuluhan.edit', $p->id) }}" class="btn btn-link text-warning px-3 mb-0">
                                                 <i class="fas fa-pencil-alt text-warning me-2"></i>Edit
                                             </a>
-                                            <form action="{{ route('penyuluhan.destroy', $p->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-link text-danger px-3 mb-0" onclick="return confirm('Apakah Anda yakin ingin menghapus jadwal ini?')">
-                                                    <i class="far fa-trash-alt me-2"></i>Hapus
-                                                </button>
-                                            </form>
                                         </div>
                                     </td>
                                 </tr>

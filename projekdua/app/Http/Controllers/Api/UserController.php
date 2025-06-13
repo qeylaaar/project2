@@ -24,4 +24,21 @@ class UserController extends Controller
             'data' => $user
         ]);
     }
+
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'fcm_token' => 'required|string'
+        ]);
+
+        $user = Pengguna::find($request->user_id);
+        $user->fcm_token = $request->fcm_token;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'FCM token berhasil diperbarui'
+        ]);
+    }
 }

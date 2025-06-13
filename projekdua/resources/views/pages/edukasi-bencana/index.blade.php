@@ -1,3 +1,4 @@
+@section('title', 'Edukasi Bencana')
 @extends('layouts.app', ['class' => 'g-sidenav-show bg-gray-100'])
 
 @section('content')
@@ -58,7 +59,7 @@
                                         <td>
                                             <div class="d-flex px-2 py-1">
                                                 <div class="d-flex flex-column justify-content-center">
-                                                    <h6 class="mb-0 text-sm">{{ $edukasi->tanggal->format('d/m/Y') }}</h6>
+                                                    <h6 class="mb-0 text-sm">{{ \Carbon\Carbon::parse($edukasi->tanggal)->format('d/m/Y') }}</h6>
                                                 </div>
                                             </div>
                                         </td>
@@ -79,13 +80,6 @@
                                                 <a href="{{ route('edukasi-bencana.edit', $edukasi->id) }}" class="btn btn-link text-dark px-3 mb-0">
                                                     <i class="fas fa-pencil-alt text-dark me-2"></i>Edit
                                                 </a>
-                                                <form action="{{ route('edukasi-bencana.destroy', $edukasi->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-link text-danger px-3 mb-0" onclick="return confirm('Apakah Anda yakin ingin menghapus edukasi bencana ini?')">
-                                                        <i class="far fa-trash-alt me-2"></i>Hapus
-                                                    </button>
-                                                </form>
                                             </div>
                                         </td>
                                     </tr>
