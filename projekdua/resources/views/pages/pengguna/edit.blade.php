@@ -13,7 +13,7 @@
                                 <h6 class="mb-0">Form Edit Pengguna</h6>
                             </div>
                             <div class="col-6 text-end">
-                                <a class="btn bg-gradient-dark mb-0" href="{{ route('pengguna.show', $pengguna->id) }}">
+                                <a class="btn bg-gradient-dark mb-0" href="{{ route('pengguna.show', $pengguna->id_user) }}">
                                     <i class="fas fa-arrow-left"></i>&nbsp;&nbsp;Kembali
                                 </a>
                             </div>

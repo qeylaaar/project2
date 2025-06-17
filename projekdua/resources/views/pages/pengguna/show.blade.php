@@ -16,7 +16,7 @@
                                 <a class="btn bg-gradient-dark mb-0" href="{{ route('pengguna.index') }}">
                                     <i class="fas fa-arrow-left"></i>&nbsp;&nbsp;Kembali
                                 </a>
-                                <a class="btn bg-gradient-dark mb-0" href="{{ route('pengguna.edit', $pengguna->id) }}">
+                                <a class="btn bg-gradient-dark mb-0" href="{{ route('pengguna.edit', $pengguna->id_user) }}">
                                     <i class="fas fa-pencil-alt"></i>&nbsp;&nbsp;Edit
                                 </a>
                             </div>
@@ -27,13 +27,25 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-control-label">Nama</label>
-                                    <p class="form-control-static">{{ $pengguna->nama }}</p>
+                                    <p class="form-control-static">{{ $pengguna->nama_user }}</p>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="form-control-label">Email</label>
                                     <p class="form-control-static">{{ $pengguna->email }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">No. Telepon</label>
+                                    <p class="form-control-static">{{ $pengguna->no_telepon }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-control-label">Username</label>
+                                    <p class="form-control-static">{{ $pengguna->username }}</p>
                                 </div>
                             </div>
                             <div class="col-md-6">

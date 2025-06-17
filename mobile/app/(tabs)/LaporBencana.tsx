@@ -31,6 +31,7 @@ export default function ReportScreen() {
   const [tanggal, setTanggal] = useState(new Date());
   const [waktu, setWaktu] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [jenisBencana, setJenisBencana] = useState('');
   const [customJenisBencana, setCustomJenisBencana] = useState('');
@@ -39,7 +40,7 @@ export default function ReportScreen() {
   const [desa, setDesa] = useState('Pilih Desa');
 
   const [alamat, setAlamat] = useState('');
-  const [media, setMedia] = useState<{ uri: string; type: string } | null>(null);
+  const [media, setMedia] = useState<{ uri: string; type: string }[]>([]);
   const [loadingLocation, setLoadingLocation] = useState(false); 
   const [deskripsi, setDeskripsi] = useState('');
   const [userId, setUserId] = useState('');
@@ -74,6 +75,15 @@ export default function ReportScreen() {
     if (selectedDate) setTanggal(selectedDate);
   };
 
+  const handleTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const jam = selectedTime.getHours().toString().padStart(2, '0');
+      const menit = selectedTime.getMinutes().toString().padStart(2, '0');
+      setWaktu(`${jam}:${menit}`);
+    }
+  };
+
   const formatDate = (date: Date) => {
     // Format: YYYY-MM-DD
     const year = date.getFullYear();
@@ -84,33 +94,24 @@ export default function ReportScreen() {
 
   const { data } = useLocalSearchParams();
 
-  const pickFromCamera = async () => {
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (!result.canceled) {
-      const selected = result.assets[0];
-      setMedia({
-        uri: selected.uri,
-        type: selected.type || 'image'
-      });
-    }
-  };
-
   const pickFromGallery = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
+      allowsMultipleSelection: true,
       quality: 1,
     });
     if (!result.canceled) {
-      const selected = result.assets[0];
-      setMedia({
-        uri: selected.uri,
-        type: selected.type || 'image'
-      });
+      setMedia([...media, ...result.assets.map(a => ({ uri: a.uri, type: a.type || 'image' }))]);
+    }
+  };
+
+  const pickFromCamera = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setMedia([...media, { uri: result.assets[0].uri, type: result.assets[0].type || 'image' }]);
     }
   };
 
@@ -182,11 +183,13 @@ export default function ReportScreen() {
     });
 
     if (media) {
-      formData.append('media', {
-        uri: media.uri,
-        name: 'bukti.' + (media.type === 'image' ? 'jpg' : 'mp4'),
-        type: media.type === 'image' ? 'image/jpeg' : 'video/mp4',
-      } as any);
+      media.forEach((m, idx) => {
+        formData.append('media[]', {
+          uri: m.uri,
+          name: `bukti${idx}.${m.type === 'image' ? 'jpg' : 'mp4'}`,
+          type: m.type === 'image' ? 'image/jpeg' : 'video/mp4',
+        } as any);
+      });
     }
 
     try {
@@ -223,7 +226,7 @@ export default function ReportScreen() {
       let [geo] = await Location.reverseGeocodeAsync(location.coords);
 
       setAlamat(
-        [geo.street, geo.name, geo.subregion, geo.region]
+        [geo.street, geo.name, geo.subregion, geo.region, geo.postalCode, geo.country]
           .filter(Boolean)
           .join(', ')
       );
@@ -303,11 +306,23 @@ export default function ReportScreen() {
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={handleDateChange}
+              maximumDate={new Date()}
+              minimumDate={(() => { let d = new Date(); d.setDate(d.getDate() - 13); return d; })()}
             />
           )}
 
           <Text style={styles.label}>Waktu Kejadian</Text>
-          <TextInput style={styles.input} value={waktu} editable={false} />
+          <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.input}>
+            <Text>{waktu}</Text>
+          </TouchableOpacity>
+          {showTimePicker && (
+            <DateTimePicker
+              value={(() => { let now = new Date(); const [h, m] = waktu.split(":"); now.setHours(Number(h)); now.setMinutes(Number(m)); return now; })()}
+              mode="time"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleTimeChange}
+            />
+          )}
 
           {/* Memanggil komponen JenisBencanaPicker */}
           <JenisBencanaPicker
@@ -317,12 +332,20 @@ export default function ReportScreen() {
             setCustomJenisBencana={setCustomJenisBencana}
           />
 
-          {/* Memanggil komponen LocationPickers */}
-          <LocationPickers
-            kecamatan={kecamatan}
-            setKecamatan={setKecamatan}
-            desa={desa}
-            setDesa={setDesa}
+          {/* Input Kecamatan dan Desa diganti dari dropdown menjadi TextInput */}
+          <Text style={styles.label}>Kecamatan</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Masukkan Kecamatan"
+            value={kecamatan}
+            onChangeText={setKecamatan}
+          />
+          <Text style={styles.label}>Desa</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Masukkan Desa"
+            value={desa}
+            onChangeText={setDesa}
           />
 
           <Text style={styles.label}>Alamat Lengkap</Text>
@@ -374,16 +397,12 @@ export default function ReportScreen() {
               <Text style={[styles.uploadText, { color: 'white', textAlign: 'center' }]}>Pilih Galeri</Text>
             </TouchableOpacity>
           </View>
-          {media?.type === 'image' && (
-            <Image source={{ uri: media.uri }} style={styles.previewMedia} />
-          )}
-          {media?.type === 'video' && (
-            <Video
-              source={{ uri: media.uri }}
-              style={styles.previewMedia}
-              useNativeControls
-              resizeMode={ResizeMode.CONTAIN}
-            />
+          {media.map((m, idx) =>
+            m.type === 'image' ? (
+              <Image key={idx} source={{ uri: m.uri }} style={styles.previewMedia} />
+            ) : (
+              <Video key={idx} source={{ uri: m.uri }} style={styles.previewMedia} useNativeControls resizeMode={ResizeMode.CONTAIN} />
+            )
           )}
 
           <TouchableOpacity style={styles.button} onPress={handleSubmit}>

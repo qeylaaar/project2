@@ -41,11 +41,21 @@ class PengaduanController extends Controller
             'kecamatan' => 'required|string',
             'desa' => 'required|string',
             'alamat' => 'required|string',
-            'media_uri' => 'nullable|string',
-            'media_type' => 'nullable|string',
             'deskripsi' => 'nullable|string',
             'status' => 'required|string',
+            'user_id' => 'required|integer',
+            'media.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov,avi|max:10240',
         ]);
+
+        $mediaUris = [];
+        $mediaTypes = [];
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                $path = $file->store('bukti', 'public');
+                $mediaUris[] = 'storage/' . $path;
+                $mediaTypes[] = $file->getMimeType();
+            }
+        }
 
         $pengaduan = Pengaduan::create([
             'user_id' => $request->user_id,
@@ -56,8 +66,8 @@ class PengaduanController extends Controller
             'kecamatan' => $request->kecamatan,
             'desa' => $request->desa,
             'alamat' => $request->alamat,
-            'media_uri' => $request->media_uri,
-            'media_type' => $request->media_type,
+            'media_uri' => json_encode($mediaUris),
+            'media_type' => json_encode($mediaTypes),
             'deskripsi' => $request->deskripsi,
             'status' => $request->status,
         ]);

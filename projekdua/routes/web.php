@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/rtl', [PageController::class, 'rtl'])->name('rtl');
 
     // Resource Pengaduan
+    Route::get('/pengaduan/print', [PengaduanController::class, 'printRekap'])->name('pengaduan.print');
     Route::resource('pengaduan', PengaduanController::class);
 
     // Resource Routes
@@ -71,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/penyuluhan/{id}/edit', [App\Http\Controllers\PenyuluhanController::class, 'edit'])->name('penyuluhan.edit');
     Route::put('/penyuluhan/{id}', [App\Http\Controllers\PenyuluhanController::class, 'update'])->name('penyuluhan.update');
     Route::delete('/penyuluhan/{id}', [App\Http\Controllers\PenyuluhanController::class, 'destroy'])->name('penyuluhan.destroy');
+
 
 
 });

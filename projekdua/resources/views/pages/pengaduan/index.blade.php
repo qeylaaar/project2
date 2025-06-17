@@ -29,15 +29,60 @@
                             <div class="col-6 d-flex align-items-center">
                                 <h6 class="mb-0">Daftar Pengaduan</h6>
                             </div>
-                            {{-- Tombol tambah pengaduan di-nonaktifkan untuk user biasa --}}
-                            {{-- <div class="col-6 text-end">
-                                <a class="btn bg-gradient-dark mb-0" href="{{ route('pengaduan.create') }}">
-                                    <i class="fas fa-plus"></i>&nbsp;&nbsp;Tambah Pengaduan
-                                </a>
-                            </div> --}}
                         </div>
                     </div>
-                    <div class="card-body px-0 pt-0 pb-2">
+                    <div class="card-body">
+                        <!-- Form Filter -->
+                        <form action="{{ route('pengaduan.index') }}" method="GET" class="mb-4">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="jenis_pengaduan">Jenis Pengaduan</label>
+                                        <select name="jenis_pengaduan" id="jenis_pengaduan" class="form-control">
+                                            <option value="">Semua Jenis</option>
+                                            @foreach($jenisPengaduan as $jenis)
+                                                <option value="{{ $jenis }}" {{ request('jenis_pengaduan') == $jenis ? 'selected' : '' }}>
+                                                    {{ $jenis }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="status">Status</label>
+                                        <select name="status" id="status" class="form-control">
+                                            <option value="">Semua Status</option>
+                                            @foreach($statuses as $status)
+                                                <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
+                                                    {{ $status }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="nama_pelapor">Nama Pelapor</label>
+                                        <input type="text" name="nama_pelapor" id="nama_pelapor" class="form-control"
+                                               value="{{ request('nama_pelapor') }}" placeholder="Cari nama pelapor...">
+                                    </div>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <div class="form-group w-100">
+                                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Tombol Print -->
+                        <div class="mb-3">
+                            <a href="{{ route('pengaduan.print', request()->query()) }}" class="btn btn-success" target="_blank">
+                                <i class="fas fa-print"></i> Print Rekap
+                            </a>
+                        </div>
+
                         <div class="table-responsive p-0">
                             <table class="table align-items-center mb-0">
                                 <thead>

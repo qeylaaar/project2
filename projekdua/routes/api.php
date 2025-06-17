@@ -52,3 +52,4 @@ Route::post('/upload-media', [PengaduanController::class, 'uploadMedia']);
 // Edukasi Bencana routes
 Route::get('/edukasi-bencana', [EdukasiBencanaApiController::class, 'index']);
 Route::get('/edukasi-bencana/{jenis}', [EdukasiBencanaApiController::class, 'byJenis']);
+Route::get('/edukasi-bencana/detail/{id}', [EdukasiBencanaApiController::class, 'show']);

@@ -8,10 +8,32 @@ use Illuminate\Support\Facades\Storage;
 
 class PengaduanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pengaduans = Pengaduan::latest()->get();
-        return view('pages.pengaduan.index', compact('pengaduans'));
+        $query = Pengaduan::query();
+
+        // Filter berdasarkan jenis pengaduan
+        if ($request->has('jenis_pengaduan') && $request->jenis_pengaduan != '') {
+            $query->where('jenis_pengaduan', $request->jenis_pengaduan);
+        }
+
+        // Filter berdasarkan status
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter berdasarkan nama pelapor
+        if ($request->has('nama_pelapor') && $request->nama_pelapor != '') {
+            $query->where('nama_pelapor', 'like', '%' . $request->nama_pelapor . '%');
+        }
+
+        $pengaduans = $query->latest()->get();
+
+        // Untuk dropdown filter
+        $jenisPengaduan = Pengaduan::distinct()->pluck('jenis_pengaduan');
+        $statuses = ['Menunggu', 'Proses', 'Selesai'];
+
+        return view('pages.pengaduan.index', compact('pengaduans', 'jenisPengaduan', 'statuses'));
     }
 
     public function create()
@@ -94,5 +116,29 @@ class PengaduanController extends Controller
             return response()->json(['success' => true, 'url' => $url]);
         }
         return response()->json(['success' => false, 'error' => 'No file uploaded']);
+    }
+
+    public function printRekap(Request $request)
+    {
+        $query = Pengaduan::query();
+
+        // Filter berdasarkan jenis pengaduan
+        if ($request->has('jenis_pengaduan') && $request->jenis_pengaduan != '') {
+            $query->where('jenis_pengaduan', $request->jenis_pengaduan);
+        }
+
+        // Filter berdasarkan status
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter berdasarkan nama pelapor
+        if ($request->has('nama_pelapor') && $request->nama_pelapor != '') {
+            $query->where('nama_pelapor', 'like', '%' . $request->nama_pelapor . '%');
+        }
+
+        $pengaduans = $query->latest()->get();
+
+        return view('pages.pengaduan.print', compact('pengaduans'));
     }
 }

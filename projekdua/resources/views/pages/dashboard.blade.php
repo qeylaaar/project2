@@ -95,12 +95,36 @@
                     <div class="card-header pb-0 pt-3 bg-transparent">
                         <h6 class="text-capitalize">Statistik Pengaduan</h6>
                         <p class="text-sm mb-0">
-                            <span class="font-weight-bold">Data pengaduan per bulan</span>
+                            <span class="font-weight-bold">Data pengaduan per tanggal</span>
                         </p>
+                        <!-- Form Filter -->
+                        <form method="GET" action="" class="row g-2 mt-2">
+                            <div class="col-md-4">
+                                <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <select name="jenis_pengaduan" class="form-control">
+                                    <option value="">Semua Jenis</option>
+                                    @foreach($all_jenis_pengaduan as $jenis)
+                                        <option value="{{ $jenis }}" {{ request('jenis_pengaduan') == $jenis ? 'selected' : '' }}>{{ $jenis }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-12 mt-2">
+                                <button class="btn btn-primary w-100">Filter</button>
+                            </div>
+                        </form>
                     </div>
                     <div class="card-body p-3">
-                        <div class="chart text-center py-5">
-                            <span class="text-muted">Belum ada data pengaduan</span>
+                        <div class="chart text-center py-3">
+                            @if(count($chart_labels) > 0)
+                                <canvas id="chart-line"></canvas>
+                            @else
+                                <span class="text-muted">Belum ada data pengaduan</span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -228,88 +252,30 @@
 @endsection
 
 @push('js')
-    <script src="./assets/js/plugins/chartjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        @if(count($chart_labels) > 0)
         var ctx1 = document.getElementById("chart-line").getContext("2d");
-
-        var gradientStroke1 = ctx1.createLinearGradient(0, 230, 0, 50);
-
-        gradientStroke1.addColorStop(1, 'rgba(251, 99, 64, 0.2)');
-        gradientStroke1.addColorStop(0.2, 'rgba(251, 99, 64, 0.0)');
-        gradientStroke1.addColorStop(0, 'rgba(251, 99, 64, 0)');
-        new Chart(ctx1, {
+        var chart = new Chart(ctx1, {
             type: "line",
             data: {
-                labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                labels: {!! json_encode($chart_labels) !!},
                 datasets: [{
-                    label: "Mobile apps",
-                    tension: 0.4,
-                    borderWidth: 0,
-                    pointRadius: 0,
+                    label: "Jumlah Pengaduan",
+                    data: {!! json_encode($chart_data) !!},
                     borderColor: "#fb6340",
-                    backgroundColor: gradientStroke1,
-                    borderWidth: 3,
+                    backgroundColor: "rgba(251, 99, 64, 0.2)",
                     fill: true,
-                    data: [50, 40, 300, 220, 500, 250, 400, 230, 500],
-                    maxBarThickness: 6
-
-                }],
+                    tension: 0.4
+                }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false,
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index',
-                },
-                scales: {
-                    y: {
-                        grid: {
-                            drawBorder: false,
-                            display: true,
-                            drawOnChartArea: true,
-                            drawTicks: false,
-                            borderDash: [5, 5]
-                        },
-                        ticks: {
-                            display: true,
-                            padding: 10,
-                            color: '#fbfbfb',
-                            font: {
-                                size: 11,
-                                family: "Open Sans",
-                                style: 'normal',
-                                lineHeight: 2
-                            },
-                        }
-                    },
-                    x: {
-                        grid: {
-                            drawBorder: false,
-                            display: false,
-                            drawOnChartArea: false,
-                            drawTicks: false,
-                            borderDash: [5, 5]
-                        },
-                        ticks: {
-                            display: true,
-                            color: '#ccc',
-                            padding: 20,
-                            font: {
-                                size: 11,
-                                family: "Open Sans",
-                                style: 'normal',
-                                lineHeight: 2
-                            },
-                        }
-                    },
-                },
-            },
+                    legend: { display: false }
+                }
+            }
         });
+        @endif
     </script>
 @endpush

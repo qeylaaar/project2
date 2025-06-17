@@ -64,25 +64,38 @@
                                             </span>
                                         </td>
                                     </tr>
-                                    @if($pengaduan->media_uri)
+                                    @php
+                                        $mediaUris = json_decode($pengaduan->media_uri, true) ?? [];
+                                        $mediaTypes = json_decode($pengaduan->media_type, true) ?? [];
+                                    @endphp
+                                    @if(count($mediaUris) > 0)
                                     <tr>
                                         <th class="ps-0">Bukti Media</th>
                                         <td>:
-                                            <!-- Thumbnail -->
-                                            <img src="{{ $pengaduan->media_uri }}" alt="Bukti" class="img-thumbnail bukti-hover" style="max-width:100px;max-height:100px;cursor:pointer;" data-bs-toggle="modal" data-bs-target="#buktiModal">
-                                            <!-- Modal -->
-                                            <div class="modal fade" id="buktiModal" tabindex="-1" aria-labelledby="buktiModalLabel" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title" id="buktiModalLabel">Bukti Media</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <div id="carouselBukti" class="carousel slide" data-bs-ride="carousel" style="max-width:300px;">
+                                                <div class="carousel-inner">
+                                                    @foreach($mediaUris as $i => $url)
+                                                        <div class="carousel-item {{ $i == 0 ? 'active' : '' }}">
+                                                            @if(isset($mediaTypes[$i]) && Str::contains($mediaTypes[$i], 'image'))
+                                                                <img src="{{ url($url) }}" class="d-block w-100" style="max-height:250px;object-fit:contain;" alt="Bukti">
+                                                            @elseif(isset($mediaTypes[$i]) && Str::contains($mediaTypes[$i], 'video'))
+                                                                <video controls class="d-block w-100" style="max-height:250px;">
+                                                                    <source src="{{ url($url) }}" type="{{ $mediaTypes[$i] }}">
+                                                                </video>
+                                                            @endif
                                                         </div>
-                                                        <div class="modal-body text-center">
-                                                            <img src="{{ $pengaduan->media_uri }}" alt="Bukti" class="img-fluid bukti-modal-img">
-                                                        </div>
-                                                    </div>
+                                                    @endforeach
                                                 </div>
+                                                @if(count($mediaUris) > 1)
+                                                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselBukti" data-bs-slide="prev">
+                                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Previous</span>
+                                                    </button>
+                                                    <button class="carousel-control-next" type="button" data-bs-target="#carouselBukti" data-bs-slide="next">
+                                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                        <span class="visually-hidden">Next</span>
+                                                    </button>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -132,36 +145,6 @@
                                             <p>{{ $pengaduan->feedback }}</p>
                                         @else
                                             <p class="text-muted mb-0">Belum ada feedback dari admin.</p>
-                                        @endif
-                                        @if($pengaduan->bukti && count(json_decode($pengaduan->bukti, true) ?? []) > 0)
-                                            @php
-                                                $buktiArray = json_decode($pengaduan->bukti, true) ?? [];
-                                            @endphp
-                                            <div id="carouselBuktiAdmin" class="carousel slide" data-bs-ride="carousel" style="max-width:300px;">
-                                                <div class="carousel-inner">
-                                                    @foreach($buktiArray as $i => $bukti)
-                                                        <div class="carousel-item {{ $i == 0 ? 'active' : '' }}">
-                                                            @if(Str::endsWith(strtolower($bukti), ['.jpg', '.jpeg', '.png', '.gif']))
-                                                                <img src="{{ asset('storage/' . $bukti) }}" class="d-block w-100" style="max-height:250px;object-fit:contain;" alt="Bukti Admin">
-                                                            @elseif(Str::endsWith(strtolower($bukti), ['.mp4', '.mov', '.avi']))
-                                                                <video controls class="d-block w-100" style="max-height:250px;">
-                                                                    <source src="{{ asset('storage/' . $bukti) }}">
-                                                                </video>
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                                @if(count($buktiArray) > 1)
-                                                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselBuktiAdmin" data-bs-slide="prev">
-                                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Previous</span>
-                                                    </button>
-                                                    <button class="carousel-control-next" type="button" data-bs-target="#carouselBuktiAdmin" data-bs-slide="next">
-                                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                                        <span class="visually-hidden">Next</span>
-                                                    </button>
-                                                @endif
-                                            </div>
                                         @endif
                                     </div>
                                 </div>

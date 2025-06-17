@@ -12,20 +12,36 @@ export default function DetailLaporan() {
   const laporan = JSON.parse(decodeURIComponent(params.data as string));
   const [imageError, setImageError] = useState(false);
 
-  // Untuk zoom image
-  const [visible, setIsVisible] = useState(false);
-  const [zoomIndex, setZoomIndex] = useState(0);
+  const [visiblePenanganan, setVisiblePenanganan] = useState(false);
+  const [zoomIndexPenanganan, setZoomIndexPenanganan] = useState(0);
 
-  // Pastikan bukti array
+  const [visibleUser, setVisibleUser] = useState(false);
+  const [zoomIndexUser, setZoomIndexUser] = useState(0);
+
   const buktiArray = Array.isArray(laporan.bukti) ? laporan.bukti : (laporan.bukti ? [laporan.bukti] : []);
 
-  // Filter hanya gambar untuk zoom
   const imageBukti = buktiArray
     .map((b: string) => `http://192.168.56.1:8000/storage/${b}`)
     .filter((uri: string) => uri.match(/\.(jpg|jpeg|png|gif)$/i));
 
-  // Untuk mapping index gambar
   let imageIdx = 0;
+
+  // Ambil array media user dari laporan, pastikan parsing JSON jika perlu
+  let mediaArray: string[] = [];
+  if (Array.isArray(laporan.media_uri)) {
+    mediaArray = laporan.media_uri;
+  } else if (typeof laporan.media_uri === 'string') {
+    try {
+      mediaArray = JSON.parse(laporan.media_uri);
+    } catch {
+      mediaArray = laporan.media_uri ? [laporan.media_uri] : [];
+    }
+  }
+
+  // Array khusus gambar dari media user untuk fitur zoom
+  const imageMediaUser = mediaArray
+    .map((m: string) => (m.startsWith('http') ? m : `http://192.168.56.1:8000/${m.replace(/^\//, '')}`))
+    .filter((uri: string) => uri.match(/\.(jpg|jpeg|png|gif)$/i));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -54,7 +70,6 @@ export default function DetailLaporan() {
 
     console.log('Media URI:', laporan.media_uri);
 
-    // Handle different media types
     if (laporan.media_type === 'video') {
       return (
         <Video
@@ -66,7 +81,6 @@ export default function DetailLaporan() {
         />
       );
     } else {
-      // For images, we'll try both the direct URI and the full URL if needed
       return (
         <Image 
           source={{ 
@@ -95,21 +109,17 @@ export default function DetailLaporan() {
 
       <ScrollView style={styles.content}>
         <View style={styles.card}>
-          {/* Status Badge */}
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(laporan.status) }]}>
             <Text style={styles.statusText}>{laporan.status}</Text>
           </View>
 
-          {/* Jenis Bencana */}
           <Text style={styles.title}>{laporan.jenis_pengaduan}</Text>
           
-          {/* Waktu dan Tanggal */}
           <View style={styles.infoSection}>
             <Text style={styles.infoLabel}>Waktu Kejadian:</Text>
             <Text style={styles.infoValue}>{laporan.waktu}, {formatDate(laporan.tanggal)}</Text>
           </View>
 
-          {/* Lokasi */}
           <View style={styles.infoSection}>
             <Text style={styles.infoLabel}>Lokasi:</Text>
             <Text style={styles.infoValue}>Desa {laporan.desa}</Text>
@@ -117,13 +127,11 @@ export default function DetailLaporan() {
             <Text style={styles.infoValue}>{laporan.alamat}</Text>
           </View>
 
-          {/* Deskripsi */}
           <View style={styles.infoSection}>
             <Text style={styles.infoLabel}>Deskripsi:</Text>
             <Text style={styles.infoValue}>{laporan.deskripsi || '-'}</Text>
           </View>
 
-          {/* Feedback dari Admin */}
           {laporan.feedback && (
             <View style={styles.infoSection}>
               <Text style={styles.infoLabel}>Feedback dari Admin:</Text>
@@ -131,7 +139,6 @@ export default function DetailLaporan() {
             </View>
           )}
 
-          {/* Bukti dari Admin - Carousel */}
           {buktiArray.length > 0 && (
             <View style={styles.infoSection}>
               <Text style={styles.infoLabel}>Bukti Penanganan:</Text>
@@ -151,15 +158,14 @@ export default function DetailLaporan() {
                         />
                       );
                     } else {
-                      // Simpan index gambar saat ini
                       const currentImageIdx = imageIdx;
                       imageIdx++;
                       return (
                         <TouchableOpacity
                           key={bukti}
                           onPress={() => {
-                            setZoomIndex(currentImageIdx);
-                            setIsVisible(true);
+                            setZoomIndexPenanganan(currentImageIdx);
+                            setVisiblePenanganan(true);
                           }}>
                           <Image
                             source={{ uri }}
@@ -171,39 +177,79 @@ export default function DetailLaporan() {
                     }
                   })}
                 </Swiper>
-                {/* Modal Zoom */}
                 <ImageViewing
                   images={imageBukti.map((uri: string) => ({ uri }))}
-                  imageIndex={zoomIndex}
-                  visible={visible}
-                  onRequestClose={() => setIsVisible(false)}
+                  imageIndex={zoomIndexPenanganan}
+                  visible={visiblePenanganan}
+                  onRequestClose={() => setVisiblePenanganan(false)}
                 />
               </View>
             </View>
           )}
 
-          {/* Bukti Media */}
-          {laporan.media_uri && (
+          {/* Bukti media user */}
+          {mediaArray.length > 0 && (
             <View style={styles.infoSection}>
               <Text style={styles.infoLabel}>Bukti:</Text>
-              {renderMedia()}
+              <View style={{ height: 260 }}>
+                <Swiper showsPagination={mediaArray.length > 1} loop={false}>
+                  {mediaArray.map((media: string, idx: number) => {
+                    // Pastikan path URL benar
+                    const uri = media.startsWith('http') ? media : `http://192.168.56.1:8000/${media.replace(/^\//, '')}`;
+                    if (uri.match(/\.(mp4|mov|avi)$/i)) {
+                      return (
+                        <Video
+                          key={media}
+                          source={{ uri }}
+                          style={styles.mediaVideo}
+                          useNativeControls
+                          resizeMode={ResizeMode.CONTAIN}
+                          isLooping={false}
+                        />
+                      );
+                    } else {
+                      // Untuk gambar, tambahkan fitur zoom
+                      return (
+                        <TouchableOpacity
+                          key={media}
+                          onPress={() => {
+                            setZoomIndexUser(imageMediaUser.indexOf(uri));
+                            setVisibleUser(true);
+                          }}>
+                          <Image
+                            source={{ uri }}
+                            style={styles.mediaImage}
+                            resizeMode="cover"
+                          />
+                        </TouchableOpacity>
+                      );
+                    }
+                  })}
+                </Swiper>
+                <ImageViewing
+                  images={imageMediaUser.map((uri: string) => ({ uri }))}
+                  imageIndex={zoomIndexUser}
+                  visible={visibleUser}
+                  onRequestClose={() => setVisibleUser(false)}
+                />
+              </View>
             </View>
           )}
 
-          {/* Info Pelapor */}
           <View style={styles.infoSection}>
             <Text style={styles.infoLabel}>Dilaporkan oleh:</Text>
             <Text style={styles.infoValue}>{laporan.nama_pelapor}</Text>
           </View>
         </View>
 
-        {/* Tombol Kembali */}
         <TouchableOpacity
           style={styles.button}
           onPress={() => router.push('/HistoryLaporan')}>
           <Text style={styles.buttonText}>Kembali ke Riwayat Laporan</Text>
         </TouchableOpacity>
       </ScrollView>
+
+
     </View>
   );
 }

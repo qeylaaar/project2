@@ -11,7 +11,7 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Total Pengaduan
         $total_pengaduan = Pengaduan::count();
@@ -44,6 +44,29 @@ class DashboardController extends Controller
             $edukasi->tanggal = Carbon::parse($edukasi->tanggal);
         }
 
+        // --- Statistik Pengaduan untuk Chart ---
+        $start = $request->input('start_date');
+        $end = $request->input('end_date');
+        $jenis = $request->input('jenis_pengaduan');
+
+        $statistikQuery = Pengaduan::query();
+        if ($start && $end) {
+            $statistikQuery->whereBetween('tanggal', [$start, $end]);
+        }
+        if ($jenis) {
+            $statistikQuery->where('jenis_pengaduan', $jenis);
+        }
+        $statistik = $statistikQuery->select(DB::raw('DATE(tanggal) as tanggal'), DB::raw('count(*) as total'))
+            ->groupBy('tanggal')
+            ->orderBy('tanggal')
+            ->get();
+        $chart_labels = $statistik->pluck('tanggal')->map(function($tgl) {
+            return Carbon::parse($tgl)->format('d/m/Y');
+        });
+        $chart_data = $statistik->pluck('total');
+        // Ambil semua jenis pengaduan untuk filter
+        $all_jenis_pengaduan = Pengaduan::select('jenis_pengaduan')->distinct()->pluck('jenis_pengaduan');
+
         return view('pages.dashboard', [
             'total_pengaduan' => $total_pengaduan,
             'pengaduan_baru' => $pengaduan_baru,
@@ -53,6 +76,9 @@ class DashboardController extends Controller
             'pengaduan_terbaru' => $pengaduan_terbaru,
             'edukasi_terbaru' => $edukasi_terbaru,
             'kategori_pengaduan' => $kategori_pengaduan,
+            'chart_labels' => $chart_labels,
+            'chart_data' => $chart_data,
+            'all_jenis_pengaduan' => $all_jenis_pengaduan,
         ]);
     }
 }

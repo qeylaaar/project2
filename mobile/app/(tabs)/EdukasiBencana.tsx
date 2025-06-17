@@ -20,7 +20,7 @@ const DisasterListPage: React.FC = () => {
 
   const handlePress = (name: string) => {
     console.log(`Selected Disaster: ${name}`);
-    router.push({ pathname: '/detailEdukasi', params: { jenis: name } });
+    router.push({ pathname: '/(tabs)/ListEdukasiByJenis', params: { jenis: name } });
   };
 
   // Komponen renderItem untuk FlatList

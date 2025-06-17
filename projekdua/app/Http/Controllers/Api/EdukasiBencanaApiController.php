@@ -25,4 +25,10 @@ class EdukasiBencanaApiController extends Controller
                 ->get()
         );
     }
+
+    public function show($id)
+    {
+        $edukasi = EdukasiBencana::findOrFail($id);
+        return response()->json($edukasi);
+    }
 }

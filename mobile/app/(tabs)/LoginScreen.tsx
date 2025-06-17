@@ -74,15 +74,25 @@ export default function Loginscreen() {
                         autoCapitalize="none"
                         editable={!isLoading}
                     />
-                    <TextInput 
-                        placeholder="Password" 
-                        placeholderTextColor="#aaa" 
-                        secureTextEntry={!passwordVisible}
-                        style={styles.input}
-                        value={password}
-                        onChangeText={setPassword}
-                        editable={!isLoading}
-                    />
+                    <View style={styles.passwordRow}>
+                        <TextInput 
+                            placeholder="Password" 
+                            placeholderTextColor="#aaa" 
+                            secureTextEntry={!passwordVisible}
+                            style={styles.inputPassword}
+                            value={password}
+                            onChangeText={setPassword}
+                            editable={!isLoading}
+                        />
+                        <TouchableOpacity 
+                            style={styles.showHideButton} 
+                            onPress={togglePasswordVisibility}
+                        >
+                            <Text style={styles.showHideButtonText}>
+                                {passwordVisible ? 'Hide' : 'Show'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -151,6 +161,21 @@ const styles = StyleSheet.create({
         borderColor: '#D2601A',
         marginBottom: 10,
     },
+    passwordRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    inputPassword: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+        padding: 14,
+        borderRadius: 8,
+        fontSize: 16,
+        color: 'black',
+        borderWidth: 1,
+        borderColor: '#D2601A',
+    },
     button: {
         width: '100%',
         backgroundColor: '#D2601A',
@@ -195,5 +220,14 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         marginBottom: 10,
+    },
+    showHideButton: {
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+    },
+    showHideButtonText: {
+        color: '#D2601A',
+        fontWeight: 'bold',
+        fontSize: 14,
     },
 });
