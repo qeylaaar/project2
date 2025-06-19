@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { API_URL } from '../api/config';
 
 const ListEdukasiByJenis = () => {
   const { jenis } = useLocalSearchParams();
@@ -14,7 +15,7 @@ const ListEdukasiByJenis = () => {
 
   useEffect(() => {
     if (!jenisString) return;
-    fetch(`http://192.168.56.1:8000/api/edukasi-bencana/${encodeURIComponent(jenisString)}`)
+    fetch(`${API_URL}/edukasi-bencana/${encodeURIComponent(jenisString)}`)
       .then(res => res.json())
       .then(json => {
         setData(Array.isArray(json) ? json : (json.data || []));

@@ -31,19 +31,13 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="tanggal" class="form-control-label">Tanggal</label>
-                                        <input type="date" class="form-control @error('tanggal') is-invalid @enderror" id="tanggal" name="tanggal" value="{{ old('tanggal', date('Y-m-d', strtotime($pengaduan->tanggal))) }}" required>
-                                        @error('tanggal')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ old('tanggal', date('Y-m-d', strtotime($pengaduan->tanggal))) }}" readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="nama_pelapor" class="form-control-label">Nama Pelapor</label>
-                                        <input type="text" class="form-control @error('nama_pelapor') is-invalid @enderror" id="nama_pelapor" name="nama_pelapor" value="{{ old('nama_pelapor', $pengaduan->nama_pelapor) }}" required>
-                                        @error('nama_pelapor')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <input type="text" class="form-control" id="nama_pelapor" name="nama_pelapor" value="{{ old('nama_pelapor', $pengaduan->nama_pelapor) }}" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -51,10 +45,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="jenis_pengaduan" class="form-control-label">Jenis Pengaduan</label>
-                                        <input type="text" class="form-control @error('jenis_pengaduan') is-invalid @enderror" id="jenis_pengaduan" name="jenis_pengaduan" value="{{ old('jenis_pengaduan', $pengaduan->jenis_pengaduan) }}" required>
-                                        @error('jenis_pengaduan')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <input type="text" class="form-control" id="jenis_pengaduan" name="jenis_pengaduan" value="{{ old('jenis_pengaduan', $pengaduan->jenis_pengaduan) }}" readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -75,10 +66,7 @@
                                 <div class="col-12">
                                     <div class="form-group">
                                         <label for="deskripsi" class="form-control-label">Deskripsi</label>
-                                        <textarea class="form-control @error('deskripsi') is-invalid @enderror" id="deskripsi" name="deskripsi" rows="4" required>{{ old('deskripsi', $pengaduan->deskripsi) }}</textarea>
-                                        @error('deskripsi')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                        <textarea class="form-control" id="deskripsi" name="deskripsi" rows="4" readonly>{{ old('deskripsi', $pengaduan->deskripsi) }}</textarea>
                                     </div>
                                 </div>
                             </div>

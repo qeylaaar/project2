@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengaduan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PengaduanController extends Controller
 {
@@ -60,7 +61,9 @@ class PengaduanController extends Controller
     public function show(Pengaduan $pengaduan)
     {
         $pengaduan->load('user');
-        return view('pages.pengaduan.show', compact('pengaduan'));
+        $mediaUris = json_decode($pengaduan->media_uri, true) ?? [];
+        $mediaTypes = json_decode($pengaduan->media_type, true) ?? [];
+        return view('pages.pengaduan.show', compact('pengaduan', 'mediaUris', 'mediaTypes'));
     }
 
     public function edit(Pengaduan $pengaduan)

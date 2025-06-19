@@ -5,6 +5,9 @@ import { AntDesign } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import Swiper from 'react-native-swiper';
 import ImageViewing from 'react-native-image-viewing';
+import { API_URL } from '../api/config';
+
+const BASE_URL = API_URL.replace('/api', '');
 
 export default function DetailLaporan() {
   const router = useRouter();
@@ -21,7 +24,7 @@ export default function DetailLaporan() {
   const buktiArray = Array.isArray(laporan.bukti) ? laporan.bukti : (laporan.bukti ? [laporan.bukti] : []);
 
   const imageBukti = buktiArray
-    .map((b: string) => `http://192.168.56.1:8000/storage/${b}`)
+    .map((b: string) => `${BASE_URL}/storage/${b}`)
     .filter((uri: string) => uri.match(/\.(jpg|jpeg|png|gif)$/i));
 
   let imageIdx = 0;
@@ -40,7 +43,7 @@ export default function DetailLaporan() {
 
   // Array khusus gambar dari media user untuk fitur zoom
   const imageMediaUser = mediaArray
-    .map((m: string) => (m.startsWith('http') ? m : `http://192.168.56.1:8000/${m.replace(/^\//, '')}`))
+    .map((m: string) => (m.startsWith('http') ? m : `${BASE_URL}/${m.replace(/^\//, '')}`))
     .filter((uri: string) => uri.match(/\.(jpg|jpeg|png|gif)$/i));
 
   const getStatusColor = (status: string) => {
@@ -85,7 +88,7 @@ export default function DetailLaporan() {
         <Image 
           source={{ 
             uri: imageError 
-              ? `http://192.168.56.1:8000/uploads/${laporan.media_uri.split('/').pop()}`
+              ? `${BASE_URL}/uploads/${laporan.media_uri.split('/').pop()}`
               : laporan.media_uri 
           }}
           style={styles.mediaImage}
@@ -145,7 +148,7 @@ export default function DetailLaporan() {
               <View style={{ height: 260 }}>
                 <Swiper showsPagination={true} loop={false}>
                   {buktiArray.map((bukti: string, idx: number) => {
-                    const uri = `http://192.168.56.1:8000/storage/${bukti}`;
+                    const uri = `${BASE_URL}/storage/${bukti}`;
                     if (bukti.match(/\.(mp4|mov|avi)$/i)) {
                       return (
                         <Video
@@ -195,7 +198,7 @@ export default function DetailLaporan() {
                 <Swiper showsPagination={mediaArray.length > 1} loop={false}>
                   {mediaArray.map((media: string, idx: number) => {
                     // Pastikan path URL benar
-                    const uri = media.startsWith('http') ? media : `http://192.168.56.1:8000/${media.replace(/^\//, '')}`;
+                    const uri = media.startsWith('http') ? media : `${BASE_URL}/${media.replace(/^\//, '')}`;
                     if (uri.match(/\.(mp4|mov|avi)$/i)) {
                       return (
                         <Video

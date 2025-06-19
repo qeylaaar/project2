@@ -22,6 +22,7 @@ import * as Location from 'expo-location';
 import JenisBencanaPicker from '../api/JenisBencanaPicker';
 import LocationPickers from '../api/LocationPickers';  
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../api/config';
 
 export default function ReportScreen() {
   const navigation = useNavigation();
@@ -52,7 +53,7 @@ export default function ReportScreen() {
         const userId = await AsyncStorage.getItem('userId');
         if (userId) {
           setUserId(userId);
-          const response = await fetch(`http://192.168.56.1:8000/api/user/${userId}`);
+          const response = await fetch(`${API_URL}/user/${userId}`);
           const result = await response.json();
           if (result.success && result.data) {
             setNamaLengkap(result.data.nama_user || '');
@@ -129,7 +130,8 @@ export default function ReportScreen() {
       const { latitude, longitude } = location.coords;
 
       const dummyAddress = `Jalan Contoh No. 123, Desa Dummy, Kecamatan Dummy, Subang`;
-      setAlamat(dummyAddress);
+      const alamatGabungan = `${dummyAddress}|||${latitude},${longitude}`;
+      setAlamat(alamatGabungan);
       
       Alert.alert('Lokasi Ditemukan', 'Alamat berhasil diisi secara otomatis.');
 
@@ -193,7 +195,7 @@ export default function ReportScreen() {
     }
 
     try {
-      const response = await axios.post('http://192.168.56.1:8000/api/pengaduans', formData, {
+      const response = await axios.post(`${API_URL}/pengaduans`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       console.log('Response dari server:', response.data);
@@ -225,13 +227,14 @@ export default function ReportScreen() {
       let location = await Location.getCurrentPositionAsync({});
       let [geo] = await Location.reverseGeocodeAsync(location.coords);
 
-      setAlamat(
-        [geo.street, geo.name, geo.subregion, geo.region, geo.postalCode, geo.country]
-          .filter(Boolean)
-          .join(', ')
-      );
-      setKecamatan(geo.subregion || '');
-      setDesa(geo.name || '');
+      // Fallback jika geo tidak ada
+      let alamatTeks = geo
+        ? [geo.street, geo.name, geo.subregion, geo.region, geo.postalCode, geo.country].filter(Boolean).join(', ')
+        : `Lokasi: ${location.coords.latitude},${location.coords.longitude}`;
+      const alamatGabungan = `${alamatTeks}|||${location.coords.latitude},${location.coords.longitude}`;
+      setAlamat(alamatGabungan);
+      setKecamatan(geo && geo.subregion ? geo.subregion : '');
+      setDesa(geo && geo.name ? geo.name : '');
 
       Alert.alert('Lokasi Diisi Otomatis', 'Kecamatan, Desa, dan alamat berhasil diisi.');
     } catch (error) {
@@ -249,19 +252,18 @@ export default function ReportScreen() {
       let location = await Location.getCurrentPositionAsync({});
       let [geo] = await Location.reverseGeocodeAsync(location.coords);
 
-      setAlamat(
-        [geo.street, geo.name, geo.subregion, geo.region]
-          .filter(Boolean)
-          .join(', ')
-      );
-      setKecamatan(geo.subregion || '');
-      setDesa(geo.name || '');
+      // Fallback jika geo tidak ada
+      let alamatTeks = geo
+        ? [geo.street, geo.name, geo.subregion, geo.region].filter(Boolean).join(', ')
+        : `Lokasi: ${location.coords.latitude},${location.coords.longitude}`;
+      const alamatGabungan = `${alamatTeks}|||${location.coords.latitude},${location.coords.longitude}`;
+      setAlamat(alamatGabungan);
+      setKecamatan(geo && geo.subregion ? geo.subregion : '');
+      setDesa(geo && geo.name ? geo.name : '');
 
-      // Buat link Google Maps
-      const link = `https://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`;
-      setLinkLokasi(link);
+      setLinkLokasi(`https://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`);
 
-      Alert.alert('Link Lokasi Dilampirkan', 'Kecamatan, Desa, alamat, dan link lokasi berhasil diisi.');
+      Alert.alert('Link Lokasi Dilampirkan', 'Alamat dan link lokasi berhasil diisi.');
     } catch (error) {
       Alert.alert('Gagal', 'Tidak bisa mendapatkan lokasi.');
     }
@@ -363,13 +365,13 @@ export default function ReportScreen() {
               style={[styles.button, { backgroundColor: '#D32F2F', flex: 1, marginRight: 5 }]}
               onPress={isiOtomatisLokasi}
             >
-              <Text style={{ color: 'white', textAlign: 'center' }}>Isi Otomatis</Text>
+              <Text style={{ color: 'white', textAlign: 'center' }}>Isi Otomatis Lokasi</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, { backgroundColor: '#43A047', flex: 1, marginLeft: 5 }]}
               onPress={lampirkanLinkLokasi}
             >
-              <Text style={{ color: 'white', textAlign: 'center' }}>Lampirkan Link</Text>
+              <Text style={{ color: 'white', textAlign: 'center' }}>Lampirkan Link Lokasi</Text>
             </TouchableOpacity>
           </View>
 

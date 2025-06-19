@@ -36,9 +36,9 @@
                         <form action="{{ route('pengaduan.index') }}" method="GET" class="mb-4">
                             <div class="row">
                                 <div class="col-md-3">
-                                    <div class="form-group">
+                                    <div class="form-group position-relative">
                                         <label for="jenis_pengaduan">Jenis Pengaduan</label>
-                                        <select name="jenis_pengaduan" id="jenis_pengaduan" class="form-control">
+                                        <select name="jenis_pengaduan" id="jenis_pengaduan" class="form-select">
                                             <option value="">Semua Jenis</option>
                                             @foreach($jenisPengaduan as $jenis)
                                                 <option value="{{ $jenis }}" {{ request('jenis_pengaduan') == $jenis ? 'selected' : '' }}>
@@ -49,9 +49,9 @@
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="form-group">
+                                    <div class="form-group position-relative">
                                         <label for="status">Status</label>
-                                        <select name="status" id="status" class="form-control">
+                                        <select name="status" id="status" class="form-select">
                                             <option value="">Semua Status</option>
                                             @foreach($statuses as $status)
                                                 <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
@@ -68,9 +68,9 @@
                                                value="{{ request('nama_pelapor') }}" placeholder="Cari nama pelapor...">
                                     </div>
                                 </div>
-                                <div class="col-md-3 d-flex align-items-end">
+                                <div class="col-md-3 d-flex align-items-end h-100">
                                     <div class="form-group w-100">
-                                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                                        <button type="submit" class="btn btn-primary w-100 btn-filter-custom">Filter</button>
                                     </div>
                                 </div>
                             </div>
@@ -157,3 +157,15 @@
         @include('layouts.footers.auth.footer')
     </div>
 @endsection
+
+<style>
+.btn-filter-custom {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    border-radius: 10px;
+}
+</style>

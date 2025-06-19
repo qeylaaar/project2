@@ -25,7 +25,7 @@ const Homepage: React.FC = () => {
 
   const handleEducationListPress = (name?: string) => {
     if (name) {
-      router.push({ pathname: '/detailEdukasi', params: { jenis: name } });
+      router.push({ pathname: '/(tabs)/ListEdukasiByJenis', params: { jenis: name } });
     } else {
       router.push('/EdukasiBencana');
     }
@@ -57,7 +57,9 @@ const Homepage: React.FC = () => {
 
         {/* Slot Kanan (Hanya Ikon Profil sekarang) */}
         <View style={styles.headerRight}>
-          {/* Ikon Penyuluhan dihapus dari sini */}
+          <TouchableOpacity onPress={() => router.push('/HistoryLaporan')} style={styles.headerIcon}>
+            <MaterialIcons name="history" size={26} color="white" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleProfilePress} style={styles.headerIcon}>
             <MaterialIcons name="person" size={26} color="white" />
           </TouchableOpacity>

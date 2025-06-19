@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
+import { API_URL } from '../api/config';
 
 export default function HistoryLaporan() {
   const router = useRouter();
@@ -13,44 +14,45 @@ export default function HistoryLaporan() {
   const [error, setError] = useState('');
   const [jenisFilter, setJenisFilter] = useState<string>('Semua');
   const [jenisList, setJenisList] = useState<string[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchLaporan = async () => {
+    try {
+      setLoading(true);
+      const userId = await AsyncStorage.getItem('userId');
+      console.log('User ID from storage:', userId);
+      if (!userId) {
+        setError('User tidak ditemukan. Silakan login kembali.');
+        setLoading(false);
+        return;
+      }
+      const response = await fetch(`${API_URL}/pengaduans/user/${userId}`);
+      const data = await response.json();
+      console.log('Response from API:', data);
+      if (data.success) {
+        setLaporanList(data.data);
+        const jenisSet = new Set(data.data.map((item: any) => item.jenis_pengaduan));
+        setJenisList(['Semua', ...Array.from(jenisSet) as string[]]);
+      } else {
+        setError('Gagal mengambil data laporan');
+      }
+    } catch (error) {
+      console.error('Error fetching laporan:', error);
+      setError('Terjadi kesalahan saat mengambil data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchLaporan = async () => {
-      try {
-        setLoading(true);
-        const userId = await AsyncStorage.getItem('userId');
-        
-        console.log('User ID from storage:', userId);
-
-        if (!userId) {
-          setError('User tidak ditemukan. Silakan login kembali.');
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(`http://192.168.56.1:8000/api/pengaduans/user/${userId}`);
-        const data = await response.json();
-        
-        console.log('Response from API:', data);
-
-        if (data.success) {
-          setLaporanList(data.data);
-          // Ambil semua jenis pengaduan unik
-          const jenisSet = new Set(data.data.map((item: any) => item.jenis_pengaduan));
-          setJenisList(['Semua', ...Array.from(jenisSet) as string[]]);
-        } else {
-          setError('Gagal mengambil data laporan');
-        }
-      } catch (error) {
-        console.error('Error fetching laporan:', error);
-        setError('Terjadi kesalahan saat mengambil data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLaporan();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchLaporan();
+    setRefreshing(false);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -134,7 +136,12 @@ export default function HistoryLaporan() {
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView style={styles.scrollView}>
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           {filteredLaporan.map((laporan: any, index: number) => (
             <TouchableOpacity
               key={index}

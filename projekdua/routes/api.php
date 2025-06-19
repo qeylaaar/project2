@@ -36,6 +36,7 @@ Route::post('/login', [AuthController::class, 'login']);
 // User routes
 Route::get('/user/{id}', [UserController::class, 'show']);
 Route::post('/update-fcm-token', [UserController::class, 'updateFcmToken']);
+Route::post('/user/update-photo/{id}', [UserController::class, 'updatePhoto']);
 
 // Penyuluhan routes
 Route::get('/penyuluhan', [PenyuluhanController::class, 'apiIndex']);

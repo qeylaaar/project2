@@ -54,7 +54,7 @@ class LoginController extends Controller
                     'user_id' => $user->id_user,
                     'role' => $user->role
                 ]);
-                return redirect()->route('dashboard');
+                return redirect()->route('dashboard')->with('success', 'Selamat datang! Login berhasil.');
             } else {
                 Log::warning('Non-admin login attempt', [
                     'user_id' => $user->id_user,

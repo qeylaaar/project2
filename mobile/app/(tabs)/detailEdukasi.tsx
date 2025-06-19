@@ -3,6 +3,7 @@ import { View, Text, ActivityIndicator, StyleSheet, ScrollView, TouchableOpacity
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { API_URL } from '../api/config';
 
 const DetailEdukasi = () => {
   const { id } = useLocalSearchParams();
@@ -13,7 +14,7 @@ const DetailEdukasi = () => {
 
   useEffect(() => {
     if (!id) return;
-    fetch(`http://192.168.56.1:8000/api/edukasi-bencana/detail/${id}`)
+    fetch(`${API_URL}/edukasi-bencana/detail/${id}`)
       .then(res => res.json())
       .then(json => {
         setData(json);

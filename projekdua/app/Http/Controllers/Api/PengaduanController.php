@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\FirebaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\NewDisasterReport;
 
 class PengaduanController extends Controller
 {
@@ -71,6 +72,21 @@ class PengaduanController extends Controller
             'deskripsi' => $request->deskripsi,
             'status' => $request->status,
         ]);
+
+        try {
+            Log::info('Mengirim notifikasi ke admin...');
+            $admin = User::where('role', 'admin')->first();
+
+            if ($admin) {
+                Log::info('Admin ditemukan dengan ID: ' . $admin->id_user);
+                $admin->notify(new NewDisasterReport($pengaduan));
+                Log::info('Notifikasi berhasil dikirim ke admin');
+            } else {
+                Log::error('Admin tidak ditemukan');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error saat mengirim notifikasi: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
