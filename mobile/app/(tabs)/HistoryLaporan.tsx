@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { API_URL } from '../api/config';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HistoryLaporan() {
   const router = useRouter();
@@ -47,6 +48,12 @@ export default function HistoryLaporan() {
   useEffect(() => {
     fetchLaporan();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchLaporan();
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

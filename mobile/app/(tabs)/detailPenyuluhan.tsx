@@ -5,9 +5,10 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Import useSafeAreaInsets
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { API_URL } from '../api/config';
 
 const api = axios.create({
-  baseURL: 'http://192.168.56.1:8000',
+  baseURL: API_URL.replace(/\/$/, ''), // pastikan tidak ada trailing slash
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -28,7 +29,7 @@ export default function DetailPenyuluhanScreen() {
   const fetchDetail = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/penyuluhan/${id}`);
+      const response = await api.get(`/penyuluhan/${id}`);
       setDetail(response.data.data);
     } catch (error) {
       setDetail(null);

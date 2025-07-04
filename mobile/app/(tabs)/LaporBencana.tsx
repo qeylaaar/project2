@@ -12,7 +12,7 @@ import {
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { AntDesign } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -147,6 +147,7 @@ export default function ReportScreen() {
     // Tentukan jenis bencana akhir yang akan disimpan
     const finalJenisBencana = jenisBencana === 'Lainnya' ? customJenisBencana : jenisBencana;
 
+
     // Validasi dasar
     if (!namaLengkap || !finalJenisBencana || kecamatan === 'Pilih Kecamatan' || desa === 'Pilih Desa' || !alamat) {
       Alert.alert('Form Belum Lengkap', 'Mohon lengkapi semua kolom yang wajib diisi.');
@@ -268,6 +269,45 @@ export default function ReportScreen() {
       Alert.alert('Gagal', 'Tidak bisa mendapatkan lokasi.');
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reset semua state ke default
+      const fetchUserAndReset = async () => {
+        // Fetch userId dari AsyncStorage
+        const userId = await AsyncStorage.getItem('userId');
+        let nama = '';
+        if (userId) {
+          try {
+            const response = await fetch(`${API_URL}/user/${userId}`);
+            const result = await response.json();
+            if (result.success && result.data) {
+              nama = result.data.nama_user || '';
+            }
+          } catch (e) {
+            nama = '';
+          }
+        }
+        setNamaLengkap(nama);
+        setUserId(userId || '');
+        setTanggal(new Date());
+        // Set waktu saat ini (jam:menit)
+        const now = new Date();
+        const jam = now.getHours().toString().padStart(2, '0');
+        const menit = now.getMinutes().toString().padStart(2, '0');
+        setWaktu(`${jam}:${menit}`);
+        setJenisBencana('');
+        setCustomJenisBencana('');
+        setKecamatan('Pilih Kecamatan');
+        setDesa('Pilih Desa');
+        setAlamat('');
+        setMedia([]);
+        setDeskripsi('');
+        setLinkLokasi('');
+      };
+      fetchUserAndReset();
+    }, [])
+  );
 
   return (
     <View style={styles.container}>

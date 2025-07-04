@@ -3,10 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import axios from 'axios';
+import { API_URL } from '../api/config';
 
 // Konfigurasi axios
 const api = axios.create({
-  baseURL: 'http://192.168.56.1:8000',
+  baseURL: API_URL.replace(/\/$/, ''), // pastikan tidak ada trailing slash
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -47,7 +48,7 @@ export default function PenyuluhanScreen() {
   const fetchPenyuluhan = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/penyuluhan');
+      const response = await api.get('/penyuluhan');
       setPenyuluhan(response.data.data);
       setError(null);
     } catch (err: any) {

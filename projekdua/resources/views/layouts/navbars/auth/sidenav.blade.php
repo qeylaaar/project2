@@ -65,14 +65,14 @@
                     <span class="nav-link-text ms-1"> Data Jadwal Penyuluhan</span>
                 </a>
             </li>
-            {{-- <li class="nav-item">
-                <a class="nav-link {{ Route::currentRouteName() == 'page.heatmap' ? 'active' : '' }}" href="{{ route('page.heatmap') }}">
+            <li class="nav-item">
+                <a class="nav-link {{ Route::currentRouteName() == 'page.pemetaan' ? 'active' : '' }}" href="{{ route('page.pemetaan') }}">
                     <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
                         <i class="ni ni-world-2 text-danger text-sm opacity-10"></i>
                     </div>
-                    <span class="nav-link-text ms-1">Heatmap Bencana</span>
+                    <span class="nav-link-text ms-1">Pemetaan Lokasi Bencana</span>
                 </a>
-            </li> --}}
+            </li>
         </ul>
     </div>
 

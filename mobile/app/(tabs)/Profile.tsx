@@ -7,6 +7,7 @@ import { Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../api/config';
 import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -21,9 +22,11 @@ export default function ProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUser();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUser();
+    }, [])
+  );
 
   const fetchUser = async () => {
     try {
@@ -50,8 +53,7 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('userId');
-      await AsyncStorage.removeItem('token');
+      await AsyncStorage.clear(); // Hapus semua data lokal
       router.replace('/LoginScreen');
     } catch (error) {
       console.error('Error logging out:', error);

@@ -50,6 +50,15 @@ Route::post('/pengaduans', [PengaduanController::class, 'store']);
 Route::get('/pengaduans/user/{user_id}', [PengaduanController::class, 'byUser']);
 Route::post('/upload-media', [PengaduanController::class, 'uploadMedia']);
 
+// Endpoint untuk polling notifikasi pengaduan terbaru
+Route::get('/pengaduan/latest', function () {
+    $latest = \App\Models\Pengaduan::orderBy('created_at', 'desc')->first();
+    return response()->json([
+        'id' => $latest ? $latest->id : null,
+        'created_at' => $latest ? $latest->created_at : null,
+    ]);
+});
+
 // Edukasi Bencana routes
 Route::get('/edukasi-bencana', [EdukasiBencanaApiController::class, 'index']);
 Route::get('/edukasi-bencana/{jenis}', [EdukasiBencanaApiController::class, 'byJenis']);
