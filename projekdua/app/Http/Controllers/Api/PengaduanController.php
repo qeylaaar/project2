@@ -34,65 +34,83 @@ class PengaduanController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'nama_pelapor' => 'required|string',
-            'tanggal' => 'required|date',
-            'waktu' => 'required',
-            'jenis_pengaduan' => 'required|string',
-            'kecamatan' => 'required|string',
-            'desa' => 'required|string',
-            'alamat' => 'required|string',
-            'deskripsi' => 'nullable|string',
-            'status' => 'required|string',
-            'user_id' => 'required|integer',
-            'media.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov,avi|max:10240',
-        ]);
-
-        $mediaUris = [];
-        $mediaTypes = [];
-        if ($request->hasFile('media')) {
-            foreach ($request->file('media') as $file) {
-                $path = $file->store('bukti', 'public');
-                $mediaUris[] = 'storage/' . $path;
-                $mediaTypes[] = $file->getMimeType();
-            }
-        }
-
-        $pengaduan = Pengaduan::create([
-            'user_id' => $request->user_id,
-            'nama_pelapor' => $request->nama_pelapor,
-            'tanggal' => $request->tanggal,
-            'waktu' => $request->waktu,
-            'jenis_pengaduan' => $request->jenis_pengaduan,
-            'kecamatan' => $request->kecamatan,
-            'desa' => $request->desa,
-            'alamat' => $request->alamat,
-            'media_uri' => json_encode($mediaUris),
-            'media_type' => json_encode($mediaTypes),
-            'deskripsi' => $request->deskripsi,
-            'status' => $request->status,
-        ]);
-
         try {
-            Log::info('Mengirim notifikasi ke admin...');
-            $admin = User::where('role', 'admin')->first();
+            Log::info('Request data:', $request->all());
 
-            if ($admin) {
-                Log::info('Admin ditemukan dengan ID: ' . $admin->id_user);
-                $admin->notify(new NewDisasterReport($pengaduan));
-                Log::info('Notifikasi berhasil dikirim ke admin');
-            } else {
-                Log::error('Admin tidak ditemukan');
+            $request->validate([
+                'nama_pelapor' => 'required|string',
+                'tanggal' => 'required|date',
+                'waktu' => 'required',
+                'jenis_pengaduan' => 'required|string',
+                'kecamatan' => 'required|string',
+                'desa' => 'required|string',
+                'alamat' => 'required|string',
+                'deskripsi' => 'nullable|string',
+                'status' => 'required|string',
+                'user_id' => 'required|integer',
+                'media.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov,avi|max:10240',
+            ]);
+
+            $mediaUris = [];
+            $mediaTypes = [];
+            if ($request->hasFile('media')) {
+                foreach ($request->file('media') as $file) {
+                    $path = $file->store('bukti', 'public');
+                    $mediaUris[] = 'storage/' . $path;
+                    $mediaTypes[] = $file->getMimeType();
+                }
             }
-        } catch (\Exception $e) {
-            Log::error('Error saat mengirim notifikasi: ' . $e->getMessage());
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Laporan berhasil dikirim',
-            'data' => $pengaduan
-        ], 201);
+            $pengaduan = Pengaduan::create([
+                'user_id' => $request->user_id,
+                'nama_pelapor' => $request->nama_pelapor,
+                'tanggal' => $request->tanggal,
+                'waktu' => $request->waktu,
+                'jenis_pengaduan' => $request->jenis_pengaduan,
+                'kecamatan' => $request->kecamatan,
+                'desa' => $request->desa,
+                'alamat' => $request->alamat,
+                'media_uri' => json_encode($mediaUris),
+                'media_type' => json_encode($mediaTypes),
+                'deskripsi' => $request->deskripsi,
+                'status' => $request->status,
+            ]);
+
+            Log::info('Pengaduan berhasil dibuat dengan ID: ' . $pengaduan->id);
+
+            // Sementara skip notifikasi untuk debugging
+            /*
+            try {
+                Log::info('Mengirim notifikasi ke admin...');
+                $admin = User::where('role', 'admin')->first();
+
+                if ($admin) {
+                    Log::info('Admin ditemukan dengan ID: ' . $admin->id_user);
+                    $admin->notify(new NewDisasterReport($pengaduan));
+                    Log::info('Notifikasi berhasil dikirim ke admin');
+                } else {
+                    Log::error('Admin tidak ditemukan');
+                }
+            } catch (\Exception $e) {
+                Log::error('Error saat mengirim notifikasi: ' . $e->getMessage());
+            }
+            */
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Laporan berhasil dikirim',
+                'data' => $pengaduan
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error dalam store pengaduan: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(Pengaduan $pengaduan)

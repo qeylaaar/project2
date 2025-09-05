@@ -18,54 +18,7 @@
             </script>
         @endif
 
-        @push('js')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        @endpush
-        <!-- Notifikasi Suara -->
-        <audio id="notifSound" src="{{ asset('sounds/notification.mp3') }}" preload="auto"></audio>
-        <script>
-        // Unlock audio agar bisa autoplay setelah interaksi user pertama
-        document.addEventListener('click', function enableAudioOnce() {
-            var audio = document.getElementById('notifSound');
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-                document.removeEventListener('click', enableAudioOnce);
-            }).catch(()=>{});
-        });
-        let lastPengaduanId = {{ $pengaduans->first() ? $pengaduans->first()->id : 0 }};
-        let isAlertShown = false;
-        setInterval(function() {
-            if (isAlertShown) return;
-            fetch("{{ url('/api/pengaduan/latest') }}")
-                .then(res => res.json())
-                .then(data => {
-                    if (data.id && data.id > lastPengaduanId) {
-                        isAlertShown = true;
-                        document.getElementById('notifSound').play().then(() => {
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'Laporan Baru!',
-                                text: 'Ada laporan baru masuk.',
-                                confirmButtonText: 'OK'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        }).catch(() => {
-                            // Jika gagal play, tetap tampilkan alert
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'Laporan Baru!',
-                                text: 'Ada laporan baru masuk.',
-                                confirmButtonText: 'OK'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        });
-                    }
-                });
-        }, 5000);
-        </script>
+        @include('layouts.partials.notifikasi-pengaduan')
         <div class="row">
             <div class="col-12">
                 <div class="card mb-4">
