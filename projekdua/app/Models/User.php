@@ -55,8 +55,18 @@ class User extends Authenticatable
      * @param $value
      * @return string
      */
-    public function setPasswordAttribute($value)
+    public function setPasswordAttribute($value): void
     {
         $this->attributes['password'] = bcrypt($value);
+    }
+
+    public function routeNotificationForTwilioSms(): ?string
+    {
+        return $this->no_telepon ? (str_starts_with($this->no_telepon, '+') ? $this->no_telepon : null) : null;
+    }
+
+    public function routeNotificationForTwilioWhatsapp(): ?string
+    {
+        return $this->routeNotificationForTwilioSms();
     }
 }

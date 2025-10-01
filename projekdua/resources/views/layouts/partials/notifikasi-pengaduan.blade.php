@@ -1,7 +1,7 @@
 @push('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endpush
-<audio id="notifSound" src="{{ asset('sounds/notification.mp3') }}" preload="auto"></audio>
+<audio id="notifSound" src="{{ asset('sounds/notification.MP3') }}" preload="auto"></audio>
 <script>
 // Unlock audio agar bisa autoplay setelah interaksi user pertama
 if (typeof window.notifUnlock === 'undefined') {
@@ -74,6 +74,7 @@ setInterval(function() {
             if (data.id && data.id > lastPengaduanId) {
                 console.log('New report detected! ID:', data.id, 'Last ID:', lastPengaduanId);
                 isAlertShown = true;
+                const newId = data.id;
 
                 // Mulai audio seketika sebelum prompt tampil untuk menghindari delay
                 if (window.__notifStop) {
@@ -86,7 +87,17 @@ setInterval(function() {
                     icon: 'info',
                     title: 'Laporan Baru!',
                     text: 'Ada laporan baru masuk.',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'Lihat',
+                    showCancelButton: true,
+                    cancelButtonText: 'Nanti',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        try {
+                            var audio = document.getElementById('notifSound');
+                            if (audio) { audio.play().catch(()=>{}); }
+                        } catch(e) {}
+                    },
                     // Tidak perlu start di didOpen karena sudah diputar sebelum prompt
                     willClose: () => {
                         console.log('Prompt closing, stopping audio loop');
@@ -95,13 +106,19 @@ setInterval(function() {
                             window.__notifStop = null;
                         }
                     }
-                }).then(() => {
-                    // Pastikan audio berhenti saat user menekan OK
+                }).then((result) => {
+                    // Pastikan audio berhenti
                     if (window.__notifStop) {
                         try { window.__notifStop(); } catch (e) {}
                         window.__notifStop = null;
                     }
-                    window.location.href = "{{ route('pengaduan.index') }}";
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ route('pengaduan.index') }}";
+                    } else {
+                        // Jika dibatalkan, update last id supaya tidak memicu berulang, dan izinkan alert berikutnya
+                        lastPengaduanId = newId;
+                        isAlertShown = false;
+                    }
                 });
             } else {
                 console.log('No new reports found');

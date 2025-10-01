@@ -78,23 +78,25 @@ class PengaduanController extends Controller
 
             Log::info('Pengaduan berhasil dibuat dengan ID: ' . $pengaduan->id);
 
-            // Sementara skip notifikasi untuk debugging
-            /*
+            // Kirim notifikasi ke semua admin yang terdaftar
             try {
                 Log::info('Mengirim notifikasi ke admin...');
-                $admin = User::where('role', 'admin')->first();
+                $admins = User::where('role', 'admin')->get();
 
-                if ($admin) {
-                    Log::info('Admin ditemukan dengan ID: ' . $admin->id_user);
-                    $admin->notify(new NewDisasterReport($pengaduan));
-                    Log::info('Notifikasi berhasil dikirim ke admin');
+                if ($admins->count() > 0) {
+                    Log::info('Jumlah admin penerima: ' . $admins->count());
+                    foreach ($admins as $admin) {
+                        $adminId = property_exists($admin, 'id_user') ? $admin->id_user : ($admin->id ?? 'unknown');
+                        Log::info('Kirim notifikasi ke admin ID: ' . $adminId . ', telp: ' . ($admin->no_telepon ?? 'null'));
+                        $admin->notify(new NewDisasterReport($pengaduan));
+                    }
+                    Log::info('Notifikasi berhasil dikirim ke semua admin');
                 } else {
                     Log::error('Admin tidak ditemukan');
                 }
             } catch (\Exception $e) {
                 Log::error('Error saat mengirim notifikasi: ' . $e->getMessage());
             }
-            */
 
             return response()->json([
                 'success' => true,

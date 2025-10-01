@@ -35,4 +35,10 @@ return [
         'server_key' => env('FIREBASE_SERVER_KEY'),
     ],
 
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from' => env('TWILIO_FROM'), // E.164 phone number for SMS, e.g. +15005550006
+    ],
+
 ];

@@ -5,9 +5,11 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
+use App\Notifications\Channels\TwilioSmsChannel;
+use App\Notifications\Contracts\TwilioSmsMessage;
 use Illuminate\Notifications\Notification;
 
-class NewDisasterReport extends Notification implements ShouldQueue
+class NewDisasterReport extends Notification implements ShouldQueue, TwilioSmsMessage
 {
     use Queueable;
 
@@ -20,7 +22,7 @@ class NewDisasterReport extends Notification implements ShouldQueue
 
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', TwilioSmsChannel::class];
     }
 
     public function databaseType()
@@ -51,4 +53,10 @@ class NewDisasterReport extends Notification implements ShouldQueue
             'created_at' => now()
         ]);
     }
+
+    public function toTwilioSms($notifiable): string
+    {
+        return 'Laporan bencana baru: ' . $this->pengaduan->jenis_pengaduan . ' di ' . $this->pengaduan->alamat . ' oleh ' . $this->pengaduan->nama_pelapor . '. ID: ' . $this->pengaduan->id;
+    }
+
 }
